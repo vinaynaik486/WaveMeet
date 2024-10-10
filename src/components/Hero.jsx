@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import Btn from './ui/btn';
-import HeroCover from '../assets/App_UI_upscaled.jpg'
+import HeroCover from '../assets/App_UI.jpg'
 import { gsap } from 'gsap';
 
 function Hero() {
