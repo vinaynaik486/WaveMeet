@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import websiteLogo from '../assets/logo.png';
+import websiteLogo from '../assets/logo/logo.png';
 import { PlusIcon } from '@heroicons/react/16/solid';
 
 function Navbar() {
@@ -16,15 +16,14 @@ function Navbar() {
   }, []);
 
   return (
-    <div ref={navbarRef} className='mt-5 mx-8 flex justify-between items-center font-sofia'>
-      <div className='flex items-center hover:scale-105 cursor-pointer hover:ease-in-out duration-100'>
+    <div ref={navbarRef} className='mt-5 mx-20 flex justify-between items-center font-sofia'>
+      <div className='flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200'>
         <img src={websiteLogo} alt="" className='h-10 reveal-text' />
         <span className='text-xl font-semibold reveal-text'>WaveMeet</span>
       </div>
       <div className='flex justify-between gap-8'>
         <button className='reveal-text ml-20'>Solutions</button>
         <button className='reveal-text'>Plan & Pricing</button>
-        <button className='reveal-text'>About</button>
         <button className='reveal-text'>Contact Us</button>
       </div>
       <div className='flex items-center gap-8'>
