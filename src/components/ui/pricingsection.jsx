@@ -2,10 +2,10 @@ import React from 'react';
 import Btn from './btn';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 
-const PricingPlan = ({ title, plan, features, isPopular, month, currency }) => (
+const PricingPlan = ({ plan, price, features, isPopular }) => (
   <div
-    className={`relative flex flex-col items-center max-w-md p-4 mx-auto my-0 border border-solid rounded-lg sm:my-0 sm:p-6 md:my-8 md:p-8 
-      ${isPopular ? 'z-20 bg-white border-2 border-gray-500 md:px-8 md:py-16' : 'z-10 lg:mx-4'}
+    className={`relative flex flex-col items-center w-96 p-4 mx-auto my-0 border border-solid rounded-lg sm:my-0 sm:p-6 md:my-8 md:p-8 
+      ${isPopular ? 'z-20 bg-white border-2 border-gray-500 md:px-8' : 'z-10 lg:mx-4'}
       transition-shadow duration-300 ease-in-out hover:shadow-lg group`}
   >
     {isPopular && (
@@ -14,11 +14,11 @@ const PricingPlan = ({ title, plan, features, isPopular, month, currency }) => (
       </div>
     )}
     <p className="m-0 text-2xl font-sofia-semibold leading-tight tracking-tight text-black border-0 border-gray-200 sm:text-3xl md:text-3xl">
-      {title}
+      {plan}
     </p>
     <div className="flex items-end mt-6 leading-7 text-gray-900 border-0 border-gray-200">
-      <p className="box-border m-0 text-4xl font-bold leading-none border-solid">{currency}{plan}</p>
-      <p className="box-border m-0 border-solid">{month}</p>
+      <p className="box-border m-0 text-4xl font-bold leading-none border-solid">₹{price}</p>
+      <p className="box-border m-0 border-solid">/ month</p>
     </div>
     <ul className="flex-1 p-0 mt-4 mb-6 space-y-4 leading-7 text-gray-900 border-0 border-gray-200">
       {features.map((feature, index) => (
