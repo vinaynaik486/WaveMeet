@@ -24,7 +24,6 @@ function Navbar() {
       <div className='flex justify-between gap-8'>
         <button className='reveal-text ml-20'>Solutions</button>
         <button className='reveal-text'>Plan & Pricing</button>
-        <button className='reveal-text'>About</button>
         <button className='reveal-text'>Contact Us</button>
       </div>
       <div className='flex items-center gap-8'>
