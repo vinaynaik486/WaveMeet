@@ -4,32 +4,9 @@ import Person2 from '../assets/person2.jpg'
 import Person3 from '../assets/person3.jpg'
 import Person4 from '../assets/person4.jpg'
 import Feature from './ui/feature'
-import PricingSection from './ui/pricingsection'
 
 
 function Solutions() {
-  const pricingPlans = [
-    {
-      title: 'Starter',
-      plan: "Free",
-      currency: false,
-      month: false,
-      features: ['Up to 50 participants per meeting', 'Meeting duration: up to 30 minutes', 'Screen Sharing'],
-      isPopular: false
-    },
-    {
-      title: 'Basic',
-      plan: 199,
-      features: ['Up to 100 participants per meeting', 'Meeting duration: up to 2 hours', 'Full HD (1080p) video quality', 'Screen Sharing'],
-      isPopular: true
-    },
-    {
-      title: 'Plus',
-      plan: 399,
-      features: ['Up to 250 participants per meeting', 'Meeting duration: Unlimited', 'Full HD (1080p) video quality', 'Advanced Multi-screen sharing', '24/7 premium customer support'],
-      isPopular: false
-    }
-  ];
   return (
     <div className='flex flex-col items-center'>
       <div className='mt-14 mx-28 mb-10 flex gap-48 font-sofia box-border'>
@@ -102,7 +79,6 @@ function Solutions() {
           </div>
         </div>
       </div>
-      <PricingSection pricingPlans={pricingPlans} />
     </div>
   )
 }
