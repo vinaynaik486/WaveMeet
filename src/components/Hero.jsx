@@ -17,7 +17,7 @@ function Hero() {
 
   return (
     <div ref={heroRef} className="font-sofia mx-5 md:mx-28 flex flex-col items-center text-center">
-      <p className="reveal-text font-bold text-3xl md:text-5xl mt-10 md:mt-20 text-[#222222]">
+      <p className="reveal-text font-sofia-bold text-3xl md:text-5xl mt-10 md:mt-20 text-[#222222]">
         Create Meetings with ease
       </p>
       <p className="reveal-text font-sofia-ultralight text-sm md:text-md mt-3 md:mt-5 text-[#666666] max-w-md md:max-w-lg">

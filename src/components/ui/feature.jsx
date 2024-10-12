@@ -11,7 +11,7 @@ const FeatureItem = ({ text }) => (
 
 const Feature = ({ heading, description, features = [] }) => (
   <div className="max-w-sm">
-    <h2 className="font-bold text-4xl text-[#222222]">{heading}</h2>
+    <h2 className="font-sofia-bold text-4xl text-[#222222]">{heading}</h2>
     <p className="font-sofia-ultralight text-md mt-5 text-[#666666]">{description}</p>
     {features.map((feature, index) => (
       <FeatureItem key={index} text={feature} />
