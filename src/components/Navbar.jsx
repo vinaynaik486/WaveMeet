@@ -17,7 +17,7 @@ function Navbar() {
 
   return (
     <div ref={navbarRef} className='mt-5 mx-20 flex justify-between items-center font-sofia'>
-      <div className='flex items-center hover:scale-105 cursor-pointer hover:ease-in-out duration-100'>
+      <div className='flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200'>
         <img src={websiteLogo} alt="" className='h-10 reveal-text' />
         <span className='text-xl font-semibold reveal-text'>WaveMeet</span>
       </div>
