@@ -9,7 +9,7 @@ import Feature from './ui/feature'
 function Solutions() {
   return (
     <div className='flex flex-col items-center'>
-      <div className='mt-14 mx-28 mb-10 flex gap-48 font-sofia box-border'>
+      <div id="solutions" className='mt-14 mx-28 mb-10 flex gap-48 font-sofia box-border'>
         <div className=' flex items-center gap-8 min-w-64'>
           <div>
             <img src={Person1} alt="" className='w-[21rem] rounded-lg shadow-[0_0_75px_-30px_rgba(0,0,0,0.75)]' />

@@ -1,12 +1,13 @@
 import React from 'react'
 import Btn from './ui/btn'
 
+
 function ContactUs() {
   return (
 
     <section className="bg-white">
       <div className="py-8 lg:py-8 px-4 mx-auto max-w-screen-md">
-        <h2 className="mb-4 text-4xl tracking-tight font-sofia-bold text-center text-gray-900">
+        <h2 id="contact_us" className="mb-4 text-4xl tracking-tight font-sofia-bold text-center text-gray-900">
           Get in touch with us
         </h2>
         <p className="mb-8 lg:mb-16 font-sofia-light text-center text-gray-500  sm:text-md">
