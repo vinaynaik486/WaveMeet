@@ -1,11 +1,11 @@
-import { Typography } from "@material-tailwind/react";
+import { HashLink } from 'react-router-hash-link';
 import websiteLogo from '../assets/logo/logo.png';
 
 function Footer() {
   return (
-    <footer className="w-full bg-white p-6">
-      <hr className="my-4 mx-16 border-gray-700" />
-      <div className="flex justify-between mx-16 items-center">
+    <footer className="w-full bg-white p-3">
+      <hr className="my-4 mx-16 border-gray-600" />
+      <div className="flex justify-between mx-20 items-center">
         <div className="flex items-center font-sofia">
           <img src={websiteLogo} alt="" className='h-10' />
           <span className='text-xl font-semibold reveal-text'>WaveMeet</span>
