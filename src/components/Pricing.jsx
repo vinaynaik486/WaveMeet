@@ -1,5 +1,5 @@
 import React from 'react'
-import PricingSection from './ui/pricingSection'
+import PricingSection from './ui/pricingsection'
 
 
 function Pricing() {

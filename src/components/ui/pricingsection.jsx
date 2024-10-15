@@ -61,9 +61,4 @@ const PricingSection = ({ pricingPlans }) => (
   </section>
 );
 
-PricingPlan.defaultProps = {
-  month: "/ month",
-  currency: "₹"
-}
-
 export default PricingSection;
