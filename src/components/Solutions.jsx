@@ -19,7 +19,7 @@ function Solutions() {
             <img src={Person4} alt="Person 4" className='w-full max-w-[21rem] rounded-lg mt-8 shadow-lg' />
           </div>
         </div>
-        <div className='mx-6 lg:mr-6 lg:mx-0'>
+        <div className='lg:mr-6'>
           <Feature
             heading="Host your interactive online meeting better"
             description="Imagine you can and be a host for every meet and now you can customize who's the host!"
@@ -32,7 +32,7 @@ function Solutions() {
         </div>
       </div>
 
-      <div className='lg:mt-20 md:mx-16 lg:mx-28 mb-10 flex flex-col lg:flex-row gap-10 lg:gap-48 font-sofia'>
+      <div className='lg:mt-20 mx-4 md:mx-16 lg:mx-28 mb-10 flex flex-col lg:flex-row gap-10 lg:gap-48 font-sofia'>
         <div className='lg:ml-6'>
           <Feature
             heading="More features, more good results!"
