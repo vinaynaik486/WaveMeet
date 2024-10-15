@@ -125,7 +125,7 @@ function Navbar() {
               <button className='reveal-text block py-2'>Login</button>
             </DialogTrigger>
             <DialogContent>
-              <Authentication />
+              <SignIn />
             </DialogContent>
           </Dialog>
           <button className='bg-[#222222] text-white py-2 px-4 mt-2 rounded-md flex justify-center items-center gap-2 reveal-text w-full'>
