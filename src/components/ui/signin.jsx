@@ -33,7 +33,6 @@ export default function SignIn() {
           <div className="flex items-center border border-gray-300 rounded-lg mb-4">
             <select className="border-r border-gray-300 p-2 bg-gray-50 text-gray-700">
               <option value="+91">IN +91</option>
-              <option value="+1">US +1</option>
             </select>
             <input
               type="tel"

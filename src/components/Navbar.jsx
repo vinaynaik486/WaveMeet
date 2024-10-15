@@ -60,10 +60,10 @@ function Navbar() {
   return (
     <div
       ref={navbarRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white bg-opacity-80 backdrop-blur-sm shadow-md py-2' : 'bg-transparent py-5'
+      className={`fixed top-0 left-0 right-0 z-50 transition- duration-300 ${scrolled ? 'bg-white bg-opacity-80 backdrop-blur-md shadow-md py-2' : 'bg-transparent py-5'
         }`}
     >
-      <div id="home" className='px-4 sm:px-6 md:px-8 lg:px-20 flex justify-between items-center font-sofia'>
+      <div id="home" className='px-4 py-4 lg:py-2 sm:px-6 md:px-8 lg:px-20 flex justify-between items-center font-sofia'>
         <div className='flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200'>
           <img src={websiteLogo} alt="" className='h-8 sm:h-10 reveal-text' />
           <span className='text-lg sm:text-xl font-semibold reveal-text'>WaveMeet</span>
@@ -110,7 +110,7 @@ function Navbar() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className='lg:hidden bg-white shadow-md py-4 px-4 sm:px-6 md:px-8'>
+        <div className='lg:hidden bg-[#f6f6f6] mx-10 mt-4 shadow-md py-4 px-4 sm:px-6 md:px-8'>
           <HashLink smooth to="/#solutions" scroll={scrollWithOffset} className="block py-2">
             <button className='reveal-text'>Solutions</button>
           </HashLink>

@@ -32,7 +32,7 @@ function Hero() {
           Register Now
         </button>
       </div>
-      <div className="reveal-text w-full max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%]">
+      <div className="reveal-text w-[64rem] max-w-[90%] sm:max-w-[80%] md:max-w-[100%] lg:mb-16">
         <img
           src={HeroCover}
           alt="App UI Cover"

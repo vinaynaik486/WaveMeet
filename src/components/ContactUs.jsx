@@ -6,7 +6,7 @@ function ContactUs() {
   return (
 
     <section className="bg-white">
-      <div className="py-8 lg:py-8 px-4 mx-auto max-w-screen-md">
+      <div className="py-8 mx-2 lg:py-8 px-4 lg:mx-auto sm:mx-16 max-w-screen-md">
         <h2 id="contact_us" className="mb-4 text-4xl tracking-tight font-sofia-bold text-center text-[#222222]">
           Get in touch with us
         </h2>
