@@ -41,7 +41,7 @@ const PricingSection = ({ pricingPlans }) => (
   <section className="py-6 leading-7 text-gray-900 bg-white sm:py-12 md:py-16">
     <div className="box-border px-4 mx-auto border-solid sm:px-6 md:px-6 lg:px-8 max-w-7xl">
       <div className="flex flex-col items-center leading-7 text-center text-gray-900 border-0 border-gray-200 mb-8">
-        <p id="pricing" className="box-border m-0 text-3xl font-sofia-semibold leading-tight text-black border-solid sm:text-4xl md:text-5xl">
+        <p id="pricing" className="box-border m-0 text-4xl font-medium leading-tight text-black border-solid sm:text-4xl md:text-5xl">
           Simple, Transparent Pricing
         </p>
         <p className="box-border mt-2 text-lg text-gray-900 border-solid sm:text-xl">

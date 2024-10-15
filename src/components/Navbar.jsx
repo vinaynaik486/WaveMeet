@@ -66,7 +66,7 @@ function Navbar() {
       <div id="home" className='px-4 py-4 lg:py-2 sm:px-6 md:px-8 lg:px-20 flex justify-between items-center font-sofia'>
         <div className='flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200'>
           <img src={websiteLogo} alt="" className='h-8 sm:h-10 reveal-text' />
-          <span className='text-lg sm:text-xl font-semibold reveal-text'>WaveMeet</span>
+          <span className='text-xl font-semibold reveal-text'>WaveMeet</span>
         </div>
 
         <div className='hidden lg:flex justify-between gap-8'>
@@ -101,9 +101,9 @@ function Navbar() {
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? (
-            <XMarkIcon className='w-6 h-6' />
+            <XMarkIcon className='w-8 h-8' />
           ) : (
-            <Bars3Icon className='w-6 h-6' />
+            <Bars3Icon className='w-8 h-8' />
           )}
         </button>
       </div>

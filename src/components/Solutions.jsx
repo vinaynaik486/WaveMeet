@@ -8,7 +8,7 @@ import Feature from './ui/feature'
 function Solutions() {
   return (
     <div className='flex flex-col items-center'>
-      <div id="solutions" className='mt-14 mx-4 md:mx-16 lg:mx-28 mb-10 flex flex-col lg:flex-row gap-10 lg:gap-48 font-sofia'>
+      <div id="solutions" className='mt-14 mx-4 md:mx-16 lg:mx-28 mb-10 flex flex-col lg:flex-row gap-10 lg:gap-48'>
         <div className='flex items-center justify-center gap-8'>
           <div>
             <img src={Person1} alt="Person 1" className='w-full max-w-[21rem] rounded-lg shadow-lg' />
@@ -19,7 +19,7 @@ function Solutions() {
             <img src={Person4} alt="Person 4" className='w-full max-w-[21rem] rounded-lg mt-8 shadow-lg' />
           </div>
         </div>
-        <div className='lg:mr-6'>
+        <div className='lg:mr-6 font-medium'>
           <Feature
             heading="Host your interactive online meeting better"
             description="Imagine you can and be a host for every meet and now you can customize who's the host!"
@@ -32,7 +32,7 @@ function Solutions() {
         </div>
       </div>
 
-      <div className='lg:mt-20 mx-4 md:mx-16 lg:mx-28 mb-10 flex flex-col lg:flex-row gap-10 lg:gap-48 font-sofia'>
+      <div className='lg:mt-20 mx-4 md:mx-16 lg:mx-28 mb-10 flex flex-col lg:flex-row gap-10 lg:gap-48 font-medium'>
         <div className='lg:ml-6'>
           <Feature
             heading="More features, more good results!"
@@ -80,8 +80,9 @@ const SubtitlesIcon = () => (
 )
 
 const RecordIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
-    <path fill="#111" fill-rule="evenodd" d="M2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10ZM10 3.5C6.68629 3.5 4 6.18629 4 9.5C4 12.8137 6.68629 15.5 10 15.5C13.3137 15.5 16 12.8137 16 9.5C16 6.18629 13.3137 3.5 10 3.5Z" clip-rule="evenodd"></path>
+  <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" id="screen-recording" width="24" height="24" x="0" y="0" version="1.1" viewBox="0 0 29 29">
+    <path d="M14.5 2C7.607 2 2 7.607 2 14.5S7.607 27 14.5 27 27 21.393 27 14.5 21.393 2 14.5 2zm0 23C8.71 25 4 20.29 4 14.5S8.71 4 14.5 4 25 8.71 25 14.5 20.29 25 14.5 25z"></path>
+    <circle cx="14.5" cy="14.5" r="6.5"></circle>
   </svg>
 )
 
