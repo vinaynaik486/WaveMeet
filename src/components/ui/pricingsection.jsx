@@ -1,58 +1,63 @@
 import React from 'react';
-import Btn from './btn';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 
 const PricingPlan = ({ plan, price, features, isPopular }) => (
   <div
-    className={`relative flex flex-col justify-between h-full w-full max-w-sm p-4 mx-auto border border-solid rounded-lg sm:p-6 md:p-8 
-      ${isPopular ? 'z-20 bg-white border-2 border-gray-500' : 'z-10 bg-white'}
-      transition-shadow duration-300 ease-in-out hover:shadow-lg group`}
+    className={`relative flex flex-col justify-between h-full w-full max-w-sm p-6 mx-auto border border-solid rounded-xl transition-all duration-300 ease-in-out
+      ${isPopular
+        ? 'z-20 bg-white dark:bg-[#121212] border border-gray-300 dark:border-[#333] shadow-lg dark:shadow-[rgba(255,255,255,0.08)]'
+        : 'z-10 bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] shadow-md dark:shadow-[rgba(255,255,255,0.05)]'}
+      hover:shadow-xl dark:hover:shadow-[rgba(255,255,255,0.12)] group`}
   >
-    {/* Added h-full for equal height and justify-between to space out content */}
     {isPopular && (
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
+      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black dark:bg-white text-white dark:text-black px-4 py-1 rounded-full text-sm font-semibold">
         Most Popular
       </div>
     )}
     <div>
-      {/* Wrapped plan name and price in a div */}
-      <p className="m-0 text-xl font-sofia-semibold leading-tight tracking-tight text-black border-0 border-gray-200 sm:text-2xl md:text-3xl">
+      <p className="m-0 text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100 sm:text-2xl md:text-3xl">
         {plan}
       </p>
-      <div className="flex items-end mt-6 leading-7 text-gray-900 border-0 border-gray-200">
-        <p className="box-border m-0 text-3xl font-bold leading-none border-solid sm:text-4xl">₹{price}</p>
-        <p className="box-border m-0 border-solid">/ month</p>
+      <div className="flex items-end mt-6">
+        <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">
+          ₹{price}
+        </p>
+        <p className="ml-1 text-gray-500 text-sm">/ month</p>
       </div>
     </div>
-    <ul className="flex-grow p-0 mt-4 mb-6 space-y-4 leading-7 text-gray-900 border-0 border-gray-200">
-      {/* Changed flex-1 to flex-grow */}
+    <ul className="mt-4 space-y-4">
       {features.map((feature, index) => (
         <li key={index} className="flex items-center gap-2">
-          <CheckCircleIcon className="w-5 sm:w-6" />
-          <span className="font-sofia-semibold text-sm sm:text-base">{feature}</span>
+          <CheckCircleIcon className="w-5 sm:w-6 text-black dark:text-white" />
+          <span className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+            {feature}
+          </span>
         </li>
       ))}
     </ul>
-    <Btn text="Start Now" className="w-full transition-colors duration-300 ease-in-out group-hover:bg-gray-700" />
+    <button
+      className={`mt-6 w-full py-2 px-4 rounded-lg transition-all duration-300 ease-in-out font-medium tracking-wide
+        ${isPopular
+          ? 'bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-100'
+          : 'bg-transparent border border-black dark:border-white text-black dark:text-white hover:bg-black dark:hover:bg-white hover:text-white dark:hover:text-black'}`}
+    >
+      Start Now
+    </button>
   </div>
 );
 
 const PricingSection = ({ pricingPlans }) => (
-  <section className="py-6 leading-7 text-gray-900 bg-white sm:py-12 md:py-16">
-    <div className="box-border px-4 mx-auto border-solid sm:px-6 md:px-6 lg:px-8 max-w-7xl">
-      <div className="flex flex-col items-center leading-7 text-center text-gray-900 border-0 border-gray-200 mb-8">
-        <p id="pricing" className="box-border m-0 text-4xl font-medium leading-tight text-black border-solid sm:text-4xl md:text-5xl">
+  <section className="py-12 bg-white dark:bg-[#121212] transition-colors duration-300">
+    <div className="max-w-7xl mx-auto px-6">
+      <div id='pricing' className="text-center mb-12">
+        <p className="text-4xl font-medium text-gray-900 dark:text-gray-100 sm:text-5xl">
           Simple, Transparent Pricing
         </p>
-        <p className="box-border mt-2 text-lg text-gray-900 border-solid sm:text-xl">
+        <p className="mt-2 text-lg text-gray-600 dark:text-gray-500 sm:text-xl">
           Choose the plan that's right for you
         </p>
       </div>
-      <div
-        id="pricing"
-        className="grid grid-cols-1 gap-8 mt-4 leading-7 text-gray-900 border-0 border-gray-200 sm:mt-6 sm:gap-6 md:mt-8 md:grid-cols-2 lg:grid-cols-3"
-      >
-        {/* Added md:grid-cols-2 for better responsiveness on medium screens */}
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {pricingPlans.map((plan, index) => (
           <PricingPlan key={index} {...plan} />
         ))}
