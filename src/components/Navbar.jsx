@@ -28,6 +28,13 @@ function Navbar() {
     }
   };
 
+  const handleDialogChange = (open) => {
+    setDialogOpen(open);
+    if (!open) {
+      setShowSignIn(true); // Reset to signin when dialog closes
+    }
+  };
+
   useEffect(() => {
     setTimeout(() => {
       window.scrollTo(0, 0);
@@ -75,10 +82,10 @@ function Navbar() {
 
   const AuthContent = () => (
     <div className="w-full">
-      {showSignIn ? <SignIn /> : <SignUp />}
+      {showSignIn ? <SignIn onToggle={toggleAuth} /> : <SignUp onToggle={toggleAuth} />}
       <button
         onClick={toggleAuth}
-        className="w-full mt-4 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+        className="w-full mt-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
       >
         {showSignIn
           ? "Don't have an account? Sign Up"
@@ -129,21 +136,18 @@ function Navbar() {
               </button>
             </>
           ) : (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
-                <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300">
-                  {showSignIn ? "Login" : "Sign Up"}
+                <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text">
+                  <span className="text-sm sm:text-base">Login</span>
                 </button>
               </DialogTrigger>
-              <DialogContent className="dark:bg-gray-800">
+              <DialogContent className="dark:bg-[#121212]">
                 <AuthContent />
               </DialogContent>
             </Dialog>
           )}
-          <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text">
-            <PlusIcon className="w-5 sm:w-6" />
-            <span className="text-sm sm:text-base">New Meeting</span>
-          </button>
+
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#333333] transition-colors"
@@ -182,13 +186,13 @@ function Navbar() {
             <button className="reveal-text dark:text-white">Contact Us</button>
           </HashLink>
           {!user && (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
                 <button className="reveal-text block py-2 w-full text-left dark:text-white">
-                  {showSignIn ? "Login" : "Sign Up"}
+                  Login
                 </button>
               </DialogTrigger>
-              <DialogContent className="dark:bg-gray-800">
+              <DialogContent className="dark:bg-[#121212]">
                 <AuthContent />
               </DialogContent>
             </Dialog>

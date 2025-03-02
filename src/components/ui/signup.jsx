@@ -115,13 +115,6 @@ export default function SignUp({ onToggleAuth }) {
         >
           {loading ? 'Loading...' : 'Sign Up'}
         </button>
-
-        <button
-          onClick={onToggleAuth}
-          className="w-full mt-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-        >
-          Already have an account? Sign In
-        </button>
       </div>
     </div>
   );
