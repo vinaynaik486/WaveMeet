@@ -1,15 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Btn from './ui/btn';
+import { useNavigate } from 'react-router-dom';
+import { PlusIcon, Square2StackIcon } from '@heroicons/react/24/solid';
 import HeroCover from '../assets/App_UI.jpg';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import SignUp from './ui/signup';
 import { gsap } from 'gsap';
 import SignIn from './ui/signin';
+import { useAuth } from '@/context/auth-context';
 
 function Hero() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const heroRef = useRef(null);
-  const [showSignIn, setShowSignIn] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isJoinMeeting, setIsJoinMeeting] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
 
   useEffect(() => {
     const elements = heroRef.current.querySelectorAll('.reveal-text');
@@ -19,15 +24,44 @@ function Hero() {
       { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: 'power2.inOut' }
     );
   }, []);
+
+  const handleNewMeeting = () => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      handleDialogOpen(false);
+    }
+  };
+
+  const handleDialogOpen = (isJoin) => {
+    setIsJoinMeeting(isJoin);
+    setDialogOpen(true);
+  };
+
   const toggleAuth = () => {
     setShowSignIn(!showSignIn);
   };
+
+  const JoinMeetingContent = () => (
+    <div className="w-full">
+      <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Join Meeting</h2>
+      <input
+        type="text"
+        placeholder="Enter meeting code or link"
+        className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none bg-transparent dark:text-white"
+      />
+      <button className="w-full mt-4 bg-[#222222] dark:bg-white text-white dark:text-[#222222] py-2 rounded-lg">
+        Join
+      </button>
+    </div>
+  );
+
   const AuthContent = () => (
     <div className="w-full">
-      {showSignIn ? <SignIn /> : <SignUp />}
+      {showSignIn ? <SignIn onToggle={toggleAuth} /> : <SignUp onToggle={toggleAuth} />}
       <button
         onClick={toggleAuth}
-        className="w-full mt-4 text-sm text-gray-600 hover:text-gray-800"
+        className="w-full mt-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
       >
         {showSignIn
           ? "Don't have an account? Sign Up"
@@ -36,6 +70,15 @@ function Hero() {
       </button>
     </div>
   );
+
+  const handleDialogChange = (open) => {
+    setDialogOpen(open);
+    if (!open) {
+      setShowSignIn(false);
+      setIsJoinMeeting(false);
+    }
+  };
+
   return (
     <div
       ref={heroRef}
@@ -48,17 +91,30 @@ function Hero() {
         Effortlessly connect with high-quality video and audio. Experience engaging meetings that bring your team closer.
       </p>
       <div className="flex mt-4 sm:mt-5 md:mt-6 justify-center gap-2 sm:gap-3 md:gap-4 reveal-text">
-        <Btn ref={heroRef} text={'Create Meeting'} />
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
-            <button className="border border-gray-400 rounded-md px-3 py-2 sm:px-4 sm:py-2 md:px-5 md:py-3 text-sm sm:text-base md:text-lg hover:scale-105 hover:border-black dark:hover:border-white dark:text-white transition-all duration-300 ease-in-out">
-              {showSignIn ? "Register Now" : "Login"}
+            <button
+              onClick={handleNewMeeting}
+              className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text"
+            >
+              <PlusIcon className="w-5 sm:w-6" />
+              <span className="text-sm sm:text-base">New Meeting</span>
             </button>
           </DialogTrigger>
-          <DialogContent className="dark:bg-gray-800">
-            <AuthContent />
+          <DialogContent className="dark:bg-[#121212]">
+            {isJoinMeeting ? <JoinMeetingContent /> : <AuthContent />}
           </DialogContent>
         </Dialog>
+
+        <button
+          onClick={() => handleDialogOpen(true)}
+          className="flex items-center gap-2 bg-white dark:bg-[#222222] border border-gray-300 dark:border-gray-600 rounded-full px-4 py-2.5 sm:px-5 sm:py-3 min-w-[260px] hover:border-gray-400 dark:hover:border-[#a3a3a3] transition-all duration-300 ease-in-out group"
+        >
+          <Square2StackIcon className="w-5 h-5 text-black dark:text-white" />
+          <span className="text-black dark:text-white text-sm sm:text-base text-left flex-grow">
+            Enter a code or link
+          </span>
+        </button>
       </div>
       <div className="reveal-text w-[64rem] max-w-[90%] sm:max-w-[80%] md:max-w-[100%] lg:mb-16">
         <img
