@@ -1,5 +1,5 @@
 import React from 'react';
-import Btn from './ui/btn';
+import Btn from '../ui/btn';
 
 function ContactUs() {
   return (

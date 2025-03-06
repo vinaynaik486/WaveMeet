@@ -1,37 +1,27 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/auth-context';
-import { ThemeProvider } from 'next-themes'; // Add this import
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import Solutions from "./components/Solutions";
-import Dashboard from './components/Dashboard';
-import Pricing from "./components/Pricing";
-import ContactUs from "./components/ContactUs";
-import Footer from "./components/Footer";
+import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from 'next-themes';
+import PrivateRoutes from './routes/PrivateRoutes';
+import LandingPage from './pages/LandingPage';
+import MeetingRoom from './pages/MeetingRoom';
 
-const HomePage = () => {
-  return (
-    <>
-      <Navbar />
-      <Hero />
-      <Solutions />
-      <Pricing />
-      <ContactUs />
-      <Footer />
-    </>
-  );
-};
-
-function App() {
+const App = () => {
   return (
     <Router>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <AuthProvider>
           <div className="scroll-smooth">
             <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/Dashboard" element={<Dashboard />} />
+              {/* Public Routes */}
+              <Route path="/" element={<LandingPage />} />
+
+              {/* Private Routes (Protected) */}
+              <Route element={<PrivateRoutes />}>
+                <Route path="/meeting/:roomId" element={<MeetingRoom />} />
+              </Route>
+
+              {/* 404 Page */}
               <Route path="*" element={
                 <div className="min-h-screen flex items-center justify-center">
                   Page Not Found
@@ -43,6 +33,6 @@ function App() {
       </ThemeProvider>
     </Router>
   );
-}
+};
 
 export default App;

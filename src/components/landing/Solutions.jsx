@@ -1,8 +1,8 @@
 import React from 'react';
-import Person1 from '../assets/person1.jpg';
-import Person2 from '../assets/person2.jpg';
-import Person3 from '../assets/person3.jpg';
-import Person4 from '../assets/person4.jpg';
+import Person1 from '/src/assets/landing-page/person1.jpg';
+import Person2 from '/src/assets/landing-page/person2.jpg';
+import Person3 from '/src/assets/landing-page/person3.jpg';
+import Person4 from '/src/assets/landing-page/person4.jpg';
 import { CheckIcon } from '@heroicons/react/24/outline';
 
 // Internal Feature Component

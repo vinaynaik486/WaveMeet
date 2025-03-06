@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PlusIcon, Square2StackIcon } from '@heroicons/react/24/solid';
-import HeroCover from '../assets/App_UI.jpg';
+import HeroCover from '/src/assets/landing-page/App_UI.jpg';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import SignUp from './ui/signup';
+import SignUp from '../auth/SignUp';
 import { gsap } from 'gsap';
-import SignIn from './ui/signin';
-import { useAuth } from '@/context/auth-context';
+import SignIn from '../auth/SignIn';
+import { useAuth } from '@/context/AuthContext';
 
 function Hero() {
   const navigate = useNavigate();

@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import websiteLogo from '../assets/logo/logo.png';
+import websiteLogo from '/src/assets/logo/logo.png';
 import { PlusIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
 import { HashLink } from 'react-router-hash-link';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import SignIn from './ui/signin';
-import SignUp from './ui/signup';
-import { useAuth } from '@/context/auth-context';
+import SignIn from '../auth/SignIn';
+import SignUp from '../auth/SignUp';
+import { useAuth } from '@/context/AuthContext';
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 
