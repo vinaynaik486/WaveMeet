@@ -5,6 +5,7 @@ import { ThemeProvider } from 'next-themes';
 import PrivateRoutes from './routes/PrivateRoutes';
 import LandingPage from './pages/LandingPage';
 import MeetingRoom from './pages/MeetingRoom';
+import Dashboard from './pages/Dashboard';
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
 
               {/* Private Routes (Protected) */}
               <Route element={<PrivateRoutes />}>
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/meeting/:roomId" element={<MeetingRoom />} />
               </Route>
 

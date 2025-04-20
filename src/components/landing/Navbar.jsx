@@ -31,7 +31,7 @@ function Navbar() {
   const handleDialogChange = (open) => {
     setDialogOpen(open);
     if (!open) {
-      setShowSignIn(true); // Reset to signin when dialog closes
+      setShowSignIn(true);
     }
   };
 
@@ -49,23 +49,33 @@ function Navbar() {
     updateNavbarHeight();
     window.addEventListener('resize', updateNavbarHeight);
 
-    const elements = navbarRef.current.querySelectorAll('.reveal-text');
-    gsap.fromTo(
-      elements,
-      { y: 50, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1, stagger: 0.1, ease: 'power2.inOut' }
-    );
+    const animationFrame = requestAnimationFrame(() => {
+      const elements = navbarRef.current.querySelectorAll('.reveal-text');
+      gsap.fromTo(
+        elements,
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: 'power1.out' }
+      );
+    });
 
+    let ticking = false;
     const handleScroll = () => {
-      const offset = window.scrollY;
-      setScrolled(offset > 50);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const offset = window.scrollY;
+          setScrolled(offset > 50);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateNavbarHeight);
+      cancelAnimationFrame(animationFrame);
     };
   }, []);
 
@@ -85,7 +95,7 @@ function Navbar() {
       {showSignIn ? <SignIn onToggle={toggleAuth} /> : <SignUp onToggle={toggleAuth} />}
       <button
         onClick={toggleAuth}
-        className="w-full mt-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+        className="w-full mt-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-sofia-light"
       >
         {showSignIn
           ? "Don't have an account? Sign Up"
@@ -98,28 +108,27 @@ function Navbar() {
   return (
     <div
       ref={navbarRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-150 transform-gpu ${scrolled
         ? 'bg-white dark:bg-[#121212] bg-opacity-80 dark:bg-opacity-80 backdrop-blur-md shadow-md py-2'
         : 'bg-transparent py-5'
         }`}
     >
       <div className="relative px-4 py-4 lg:py-2 sm:px-6 md:px-8 lg:px-20 flex justify-between items-center font-sofia">
         {/* Logo */}
-        <div className="flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200">
-          <img src={websiteLogo} alt="" className="h-8 sm:h-10 reveal-text" />
+        <div className="flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200 transform-gpu">
+          <img src={websiteLogo} alt="" className="h-8 sm:h-10 reveal-text" loading="eager" />
           <span className="text-xl font-semibold reveal-text dark:text-white">WaveMeet</span>
         </div>
 
-        {/* Centered Navigation Items */}
         <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 gap-8">
           <HashLink smooth to="/#solutions" scroll={scrollWithOffset} className="cursor-pointer">
-            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300">Solutions</button>
+            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-sofia-medium">Solutions</button>
           </HashLink>
           <HashLink smooth to="/#pricing" scroll={scrollWithOffset} className="cursor-pointer">
-            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300">Plan & Pricing</button>
+            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-sofia-medium">Plan & Pricing</button>
           </HashLink>
           <HashLink smooth to="/#contact_us" scroll={scrollWithOffset} className="cursor-pointer">
-            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300">Contact Us</button>
+            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-sofia-medium">Contact Us</button>
           </HashLink>
         </div>
 
@@ -127,10 +136,12 @@ function Navbar() {
         <div className="hidden lg:flex items-center gap-4">
           {user ? (
             <>
-              <span className="dark:text-white">Welcome, {user.email || user.phoneNumber}</span>
+              <span className="dark:text-white font-sofia-light">
+                Welcome, {user.displayName ? user.displayName.split(' ')[0] : 'User'}
+              </span>
               <button
                 onClick={handleLogout}
-                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white font-sofia-medium"
               >
                 Logout
               </button>
@@ -138,7 +149,7 @@ function Navbar() {
           ) : (
             <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
-                <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text">
+                <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text font-sofia-medium">
                   <span className="text-sm sm:text-base">Login</span>
                 </button>
               </DialogTrigger>
@@ -177,18 +188,18 @@ function Navbar() {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white dark:bg-[#1e1e1e] mx-4 mt-4 rounded-lg shadow-md py-4 px-4 sm:px-6 md:px-8">
           <HashLink smooth to="/#solutions" scroll={scrollWithOffset} className="block py-2">
-            <button className="reveal-text dark:text-white">Solutions</button>
+            <button className="reveal-text dark:text-white font-sofia-medium">Solutions</button>
           </HashLink>
           <HashLink smooth to="/#pricing" scroll={scrollWithOffset} className="block py-2">
-            <button className="reveal-text dark:text-white">Plan & Pricing</button>
+            <button className="reveal-text dark:text-white font-sofia-medium">Plan & Pricing</button>
           </HashLink>
           <HashLink smooth to="/#contact_us" scroll={scrollWithOffset} className="block py-2">
-            <button className="reveal-text dark:text-white">Contact Us</button>
+            <button className="reveal-text dark:text-white font-sofia-medium">Contact Us</button>
           </HashLink>
           {!user && (
             <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
-                <button className="reveal-text block py-2 w-full text-left dark:text-white">
+                <button className="reveal-text block py-2 w-full text-left dark:text-white font-sofia-medium">
                   Login
                 </button>
               </DialogTrigger>
@@ -198,7 +209,7 @@ function Navbar() {
             </Dialog>
           )}
           <div className="flex items-center gap-2 mt-2">
-            <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 rounded-md flex justify-center items-center gap-2 reveal-text flex-1">
+            <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 rounded-md flex justify-center items-center gap-2 reveal-text flex-1 font-sofia-medium">
               <PlusIcon className="w-5" />
               <span className="text-sm">New Meeting</span>
             </button>
