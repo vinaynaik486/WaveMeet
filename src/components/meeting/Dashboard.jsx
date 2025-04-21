@@ -4,12 +4,27 @@ import { useAuth } from '@/context/AuthContext';
 
 // Function to generate a random room ID
 const generateRoomId = () => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < 10; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  const chars = 'abcdefghijkmnpqrstuvwxyz'; // Removed confusing characters like 'l', 'o'
+  let code = '';
+  
+  // First part (3 characters)
+  for (let i = 0; i < 3; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return result;
+  code += '-';
+  
+  // Middle part (4 characters)
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  code += '-';
+  
+  // Last part (3 characters)
+  for (let i = 0; i < 3; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return code;
 };
 
 function MeetingDashboard() {
@@ -28,8 +43,6 @@ function MeetingDashboard() {
     setIsCreating(true);
     try {
       const newRoomId = generateRoomId();
-      setRoomId(newRoomId);
-      // Navigate to the meeting room with the new room ID
       navigate(`/meeting/${newRoomId}`);
     } catch (error) {
       console.error('Error creating meeting:', error);

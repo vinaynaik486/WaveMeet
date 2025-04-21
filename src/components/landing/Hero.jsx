@@ -37,7 +37,10 @@ function Hero() {
 
   const handleNewMeeting = () => {
     if (user) {
-      navigate('/dashboard');
+      const newRoomCode = generateRoomCode();
+      localStorage.setItem(`room_${newRoomCode}_host`, user.uid);
+      localStorage.setItem('current_room_code', newRoomCode);
+      navigate(`/meeting/${newRoomCode}`);
     } else {
       setShowSignIn(true);
       setDialogOpen(true);

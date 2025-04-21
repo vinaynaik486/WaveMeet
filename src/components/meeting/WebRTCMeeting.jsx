@@ -70,8 +70,8 @@ function WebRTCMeeting({ roomId }) {
     const exitSound = new Audio('/sounds/exit.mp3');
     
     // Set volumes
-    joinSound.volume = 0.5;
-    exitSound.volume = 0.5;
+    joinSound.volume = 1;
+    exitSound.volume = 1;
     
     // Preload the sounds
     joinSound.load();
@@ -741,22 +741,38 @@ function WebRTCMeeting({ roomId }) {
     }
   };
 
-  // Function to generate a unique room code
+  // Function to generate a unique room code like Google Meet (abc-defg-hij)
   const generateRoomCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const chars = 'abcdefghijkmnpqrstuvwxyz'; // Removed confusing characters like 'l', 'o'
     let code = '';
-    for (let i = 0; i < 10; i++) {
+    
+    // First part (3 characters)
+    for (let i = 0; i < 3; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    code += '-';
+    
+    // Middle part (4 characters)
+    for (let i = 0; i < 4; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    code += '-';
+    
+    // Last part (3 characters)
+    for (let i = 0; i < 3; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
     return code;
   };
 
   // Function to copy room code to clipboard
   const copyRoomCode = async () => {
     try {
-      await navigator.clipboard.writeText(roomId);
-      // You can add a toast notification here
-      console.log('Room code copied to clipboard!');
+      // Get the current room code from localStorage or use the roomId prop
+      const currentRoomCode = localStorage.getItem('current_room_code') || roomId;
+      await navigator.clipboard.writeText(currentRoomCode);
+      console.log('Room code copied:', currentRoomCode);
     } catch (err) {
       console.error('Failed to copy room code:', err);
     }
@@ -847,7 +863,9 @@ function WebRTCMeeting({ roomId }) {
           onClick={copyRoomCode}
           className="absolute top-4 left-4 bg-[#1E1E1E]/80 backdrop-blur-md px-4 py-2 rounded-xl text-sm hover:bg-[#2A2A2A]/80 transition-colors flex items-center gap-2"
         >
-          <span className="font-sofia-medium">Room: {roomId}</span>
+          <span className="font-sofia-medium">
+            Room: {localStorage.getItem('current_room_code') || roomId}
+          </span>
           <FaCopy size={14} className="text-gray-400" />
         </button>
 
