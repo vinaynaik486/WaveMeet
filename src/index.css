@@ -7,7 +7,7 @@
   font-style: normal;
   font-weight: 400; /* Normal weight */
   src: local("Sofia Pro Regular"),
-    url("Sofia-Pro-Regular-Az.woff") format("woff");
+    url("/fonts/Sofia-Pro-Regular-Az.woff") format("woff");
 }
 
 @font-face {
@@ -54,7 +54,8 @@
   font-family: "Sofia Pro Light";
   font-style: normal;
   font-weight: 300; /* Light weight */
-  src: local("Sofia Pro Light"), url("Sofia-Pro-Light-Az.woff") format("woff");
+  src: local("Sofia Pro Light"),
+    url("/fonts/Sofia-Pro-Light-Az.woff") format("woff");
 }
 
 @font-face {
@@ -69,7 +70,8 @@
   font-family: "Sofia Pro Medium";
   font-style: normal;
   font-weight: 500; /* Medium weight */
-  src: local("Sofia Pro Medium"), url("Sofia-Pro-Medium-Az.woff") format("woff");
+  src: local("Sofia Pro Medium"),
+    url("/fonts/Sofia-Pro-Medium-Az.woff") format("woff");
 }
 
 @font-face {
@@ -85,7 +87,7 @@
   font-style: normal;
   font-weight: 600; /* SemiBold weight */
   src: local("Sofia Pro SemiBold"),
-    url("Sofia-Pro-SemiBold-Az.woff") format("woff");
+    url("/fonts/Sofia-Pro-SemiBold-Az.woff") format("woff");
 }
 
 @font-face {
@@ -100,7 +102,8 @@
   font-family: "Sofia Pro Bold";
   font-style: normal;
   font-weight: 700; /* Bold weight */
-  src: local("Sofia Pro Bold"), url("Sofia-Pro-Bold-Az.woff") format("woff");
+  src: local("Sofia Pro Bold"),
+    url("/fonts/Sofia-Pro-Bold-Az.woff") format("woff");
 }
 
 @font-face {

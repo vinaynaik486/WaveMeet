@@ -8,6 +8,31 @@ import { gsap } from 'gsap';
 import SignIn from '../auth/SignIn';
 import { useAuth } from '@/context/AuthContext';
 
+// Function to generate a random room ID like Google Meet
+const generateRoomId = () => {
+  const chars = 'abcdefghijkmnpqrstuvwxyz123456789';
+  let code = '';
+  
+  // First part (3 characters)
+  for (let i = 0; i < 3; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  code += '-';
+  
+  // Middle part (4 characters)
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  code += '-';
+  
+  // Last part (3 characters)
+  for (let i = 0; i < 3; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return code;
+};
+
 function Hero() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -16,9 +41,8 @@ function Hero() {
   const [isJoinMeeting, setIsJoinMeeting] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const [meetingCode, setMeetingCode] = useState('');
-  const [roomCode, setRoomCode] = useState('');
-  const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [error, setError] = useState('');
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
 
   useEffect(() => {
     const animationFrame = requestAnimationFrame(() => {
@@ -37,10 +61,8 @@ function Hero() {
 
   const handleNewMeeting = () => {
     if (user) {
-      const newRoomCode = generateRoomCode();
-      localStorage.setItem(`room_${newRoomCode}_host`, user.uid);
-      localStorage.setItem('current_room_code', newRoomCode);
-      navigate(`/meeting/${newRoomCode}`);
+      const newRoomId = generateRoomId();
+      navigate(`/meeting/${newRoomId}`);
     } else {
       setShowSignIn(true);
       setDialogOpen(true);
@@ -54,6 +76,8 @@ function Hero() {
       } else {
         setShowSignIn(true);
         setDialogOpen(true);
+        // Store the meeting code to use after sign in
+        localStorage.setItem('pendingMeetingCode', meetingCode.trim());
       }
     }
   };
@@ -95,10 +119,18 @@ function Hero() {
             onSuccess={() => {
               setDialogOpen(false);
               setShowSignIn(false);
-              
-              if (!isJoinMeeting) {
-                const newRoomCode = generateRoomCode();
-                navigate(`/meeting/${newRoomCode}`);
+              if (isJoinMeeting) {
+                // Use the stored meeting code
+                const code = localStorage.getItem('pendingMeetingCode');
+                localStorage.removeItem('pendingMeetingCode');
+                if (code) {
+                  navigate(`/meeting/${code}`);
+                }
+              } else {
+                // Use the stored room ID or generate a new one
+                const roomId = localStorage.getItem('pendingRoomId') || generateRoomId();
+                localStorage.removeItem('pendingRoomId');
+                navigate(`/meeting/${roomId}`);
               }
             }} 
           />
@@ -132,40 +164,6 @@ function Hero() {
     }
   };
 
-  // Unique room id
-  const generateRoomCode = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 10; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-  };
-
-  // new meeting creation
-  const createMeeting = () => {
-    if (!user) {
-      setShowJoinDialog(true);
-      return;
-    }
-    const newRoomCode = generateRoomCode();
-    navigate(`/meeting/${newRoomCode}`);
-  };
-
-  // join an existing meeting
-  const joinMeeting = (e) => {
-    e.preventDefault();
-    if (!user) {
-      setShowJoinDialog(true);
-      return;
-    }
-    if (!roomCode.trim()) {
-      setError('Please enter a room code');
-      return;
-    }
-    navigate(`/meeting/${roomCode.trim()}`);
-  };
-
   return (
     <div
       ref={heroRef}
@@ -193,13 +191,24 @@ function Hero() {
           </DialogContent>
         </Dialog>
 
-        <form onSubmit={joinMeeting} className="flex items-center gap-4">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (!user) {
+            setShowJoinDialog(true);
+            return;
+          }
+          if (!meetingCode.trim()) {
+            setError('Please enter a meeting code');
+            return;
+          }
+          navigate(`/meeting/${meetingCode.trim()}`);
+        }} className="flex items-center gap-4">
           <div className="relative">
             <input
               type="text"
-              value={roomCode}
+              value={meetingCode}
               onChange={(e) => {
-                setRoomCode(e.target.value.toUpperCase());
+                setMeetingCode(e.target.value);
                 setError('');
               }}
               placeholder="Enter a code or link"
@@ -247,7 +256,8 @@ function Hero() {
               <button
                 onClick={() => {
                   setShowJoinDialog(false);
-                  // Add your sign-in logic here
+                  setShowSignIn(true);
+                  setDialogOpen(true);
                 }}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-xl font-sofia-medium transition-colors"
               >

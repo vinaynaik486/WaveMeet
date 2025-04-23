@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { io } from 'socket.io-client';
 import { 
   FaMicrophone, 
   FaMicrophoneSlash, 
@@ -13,7 +14,8 @@ import {
   FaSignOutAlt,
   FaUser,
   FaChevronUp,
-  FaCopy
+  FaCopy,
+  FaInfoCircle
 } from 'react-icons/fa';
 import { 
   VideoCameraIcon, 
@@ -23,14 +25,43 @@ import {
   ComputerDesktopIcon, 
   PhoneXMarkIcon 
 } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
-function WebRTCMeeting({ roomId }) {
+// Function to generate a random room ID
+const generateRoomId = () => {
+  const chars = 'abcdefghijkmnpqrstuvwxyz123456789';
+  let code = '';
+  
+  // First part (3 characters)
+  for (let i = 0; i < 3; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  code += '-';
+  
+  // Middle part (4 characters)
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  code += '-';
+  
+  // Last part (3 characters)
+  for (let i = 0; i < 3; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return code;
+};
+
+function WebRTCMeeting() {
+  const { roomId: urlRoomId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [roomId, setRoomId] = useState('');
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showRoomInfo, setShowRoomInfo] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [remoteStream, setRemoteStream] = useState(null);
@@ -48,7 +79,8 @@ function WebRTCMeeting({ roomId }) {
   const [showScreenDropdown, setShowScreenDropdown] = useState(false);
   const [screenSources, setScreenSources] = useState([]);
   const [selectedScreenId, setSelectedScreenId] = useState('');
-  const [gridLayout, setGridLayout] = useState('1x1'); // '1x1', '2x2', '3x3' etc.
+  const [gridLayout, setGridLayout] = useState('1x1');
+  const [meetingCode, setMeetingCode] = useState('');
   
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -62,26 +94,22 @@ function WebRTCMeeting({ roomId }) {
   const animationFrameRef = useRef(null);
   const joinSoundRef = useRef(null);
   const exitSoundRef = useRef(null);
+  const socketRef = useRef(null);
 
   // Initialize audio elements
   useEffect(() => {
-    // Create audio elements
     const joinSound = new Audio('/sounds/entry.mp3');
     const exitSound = new Audio('/sounds/exit.mp3');
     
-    // Set volumes
     joinSound.volume = 1;
     exitSound.volume = 1;
     
-    // Preload the sounds
     joinSound.load();
     exitSound.load();
     
-    // Store references
     joinSoundRef.current = joinSound;
     exitSoundRef.current = exitSound;
 
-    // Play join sound after animation completes
     const animationTimer = setTimeout(() => {
       setIsJoining(false);
       playJoinSound();
@@ -96,7 +124,6 @@ function WebRTCMeeting({ roomId }) {
     };
   }, []);
 
-  // Function to play join sound
   const playJoinSound = () => {
     if (joinSoundRef.current) {
       joinSoundRef.current.currentTime = 0;
@@ -105,7 +132,6 @@ function WebRTCMeeting({ roomId }) {
     }
   };
 
-  // Function to play exit sound
   const playExitSound = () => {
     if (exitSoundRef.current) {
       exitSoundRef.current.currentTime = 0;
@@ -114,42 +140,105 @@ function WebRTCMeeting({ roomId }) {
     }
   };
 
+  const analyzeAudio = () => {
+    if (!analyserRef.current) return;
+
+    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+    analyserRef.current.getByteFrequencyData(dataArray);
+    
+    const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
+    setAudioLevel(average);
+
+    animationFrameRef.current = requestAnimationFrame(analyzeAudio);
+  };
+
+  // Initialize socket connection and join room
   useEffect(() => {
     if (!user) {
       navigate('/');
       return;
     }
 
-    // Simulate joining animation
-    const animationTimer = setTimeout(() => {
-      setIsJoining(false);
-    }, 1000);
+    if (!urlRoomId) {
+      const newRoomId = generateRoomId();
+      navigate(`/meeting/${newRoomId}`, { replace: true });
+      return;
+    }
 
-    // Check if this is the first participant (host)
-    const checkHostStatus = async () => {
-      try {
-        // In a real implementation, you would check with your signaling server
-        // For now, we'll use localStorage to simulate this
-        const existingParticipants = JSON.parse(localStorage.getItem(`room_${roomId}_participants`) || '[]');
-        if (existingParticipants.length === 0) {
-          setIsHost(true);
-          localStorage.setItem(`room_${roomId}_host`, user.uid);
+    setRoomId(urlRoomId);
+    setMeetingCode(urlRoomId);
+
+    let isComponentMounted = true;
+    let audioContext = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+
+    // Initialize Socket.IO connection with retry
+    const connectSocket = () => {
+      if (!isComponentMounted) return;
+
+      socketRef.current = io('http://localhost:3001', {
+        transports: ['websocket'],
+        path: '/socket.io/',
+        reconnection: true,
+        reconnectionAttempts: maxReconnectAttempts,
+        reconnectionDelay: 1000,
+        forceNew: true,
+        timeout: 10000,
+        autoConnect: true
+      });
+
+      // Socket connection event handlers
+      socketRef.current.on('connect', async () => {
+        console.log('Socket connected');
+        reconnectAttempts = 0; // Reset reconnect attempts on successful connection
+        if (isComponentMounted) {
+          // Initialize media first
+          try {
+            const stream = await initializeMedia();
+            if (stream && isComponentMounted) {
+              // Join room after successful media initialization
+              socketRef.current.emit('join-room', {
+                roomId: urlRoomId,
+                userId: user.uid,
+                userName: user.displayName || 'Anonymous'
+              });
+            }
+          } catch (error) {
+            console.error('Error initializing media:', error);
+            toast.error('Failed to initialize media devices');
+          }
         }
-        
-        // Add current user to participants
-        const updatedParticipants = [...existingParticipants, { id: user.uid, name: user.displayName }];
-        localStorage.setItem(`room_${roomId}_participants`, JSON.stringify(updatedParticipants));
-        setParticipants(updatedParticipants);
-      } catch (error) {
-        console.error('Error checking host status:', error);
-      }
+      });
+
+      socketRef.current.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+        reconnectAttempts++;
+        if (reconnectAttempts >= maxReconnectAttempts) {
+          toast.error('Failed to connect to server after multiple attempts');
+        } else if (isComponentMounted) {
+          toast.error('Failed to connect to server, retrying...');
+        }
+      });
+
+      socketRef.current.on('disconnect', (reason) => {
+        console.log('Socket disconnected:', reason);
+        if (reason === 'io server disconnect' && isComponentMounted) {
+          // Server initiated disconnect, try to reconnect
+          socketRef.current.connect();
+        }
+      });
     };
 
-    checkHostStatus();
-
+    // Initialize media and setup peer connection
     const initializeMedia = async () => {
+      if (!isComponentMounted) return null;
+
       try {
-        // First try to get both audio and video
+        // Create audio context first
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        audioContextRef.current = audioContext;
+
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             width: { ideal: 1280 },
@@ -159,111 +248,569 @@ function WebRTCMeeting({ roomId }) {
           audio: true
         });
         
+        if (!isComponentMounted) {
+          stream.getTracks().forEach(track => track.stop());
+          return null;
+        }
+
         localStream.current = stream;
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
         }
 
-        // Set up audio context
-        if (!audioContextRef.current) {
-          audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        analyserRef.current = audioContextRef.current.createAnalyser();
+        // Set up audio analysis
+        analyserRef.current = audioContext.createAnalyser();
         analyserRef.current.fftSize = 256;
-        const source = audioContextRef.current.createMediaStreamSource(stream);
+        const source = audioContext.createMediaStreamSource(stream);
         source.connect(analyserRef.current);
         
-        // Start analyzing audio levels
         analyzeAudio();
 
-        setupPeerConnection(stream);
+        // Setup peer connection
+        const success = await setupPeerConnection(stream);
+        if (!success || !isComponentMounted) {
+          stream.getTracks().forEach(track => track.stop());
+          return null;
+        }
+
+        return stream;
       } catch (error) {
         console.error('Error accessing media devices:', error);
-        // If video fails, try audio only
+        if (!isComponentMounted) return null;
+
         try {
           const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          
+          if (!isComponentMounted) {
+            audioStream.getTracks().forEach(track => track.stop());
+            return null;
+          }
+
           localStream.current = audioStream;
           setIsVideoOff(true);
           
-          // Set up audio context
-          if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+          // Set up audio analysis
+          if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            audioContextRef.current = audioContext;
           }
-          analyserRef.current = audioContextRef.current.createAnalyser();
+          analyserRef.current = audioContext.createAnalyser();
           analyserRef.current.fftSize = 256;
-          const source = audioContextRef.current.createMediaStreamSource(audioStream);
+          const source = audioContext.createMediaStreamSource(audioStream);
           source.connect(analyserRef.current);
           
           analyzeAudio();
-          setupPeerConnection(audioStream);
+
+          // Setup peer connection
+          const success = await setupPeerConnection(audioStream);
+          if (!success || !isComponentMounted) {
+            audioStream.getTracks().forEach(track => track.stop());
+            return null;
+          }
+
+          return audioStream;
         } catch (audioError) {
           console.error('Error accessing audio:', audioError);
+          if (isComponentMounted) {
+            toast.error('Failed to access media devices');
+          }
+          return null;
         }
       }
     };
 
-    const analyzeAudio = () => {
-      if (!analyserRef.current) return;
+    connectSocket();
 
-      const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-      analyserRef.current.getByteFrequencyData(dataArray);
+    // Socket.IO event listeners
+    socketRef.current.on('room-info', ({ roomId: serverRoomId, peers, iceServers }) => {
+      if (!isComponentMounted) return;
+
+      console.log('Received room info:', { serverRoomId, peers });
+      setRoomId(serverRoomId);
       
-      // Calculate average volume level
-      const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-      setAudioLevel(average);
+      // Update participants list with unique IDs
+      setParticipants(prevParticipants => {
+        const newParticipants = peers.map(peer => ({
+          id: peer.id,
+          userId: peer.userId,
+          name: peer.userName || `User ${peer.id.slice(0, 4)}`
+        }));
+        return [...newParticipants];
+      });
 
-      animationFrameRef.current = requestAnimationFrame(analyzeAudio);
+      // Set host status
+      if (peers.length === 0) {
+        setIsHost(true);
+      }
+
+      // Store ICE servers for later use
+      if (iceServers) {
+        localStorage.setItem('iceServers', JSON.stringify(iceServers));
+      }
+    });
+
+    socketRef.current.on('user-joined', async ({ peerId, userId, userName }) => {
+      if (!isComponentMounted) return;
+
+      console.log('User joined:', { peerId, userId, userName });
+      setParticipants(prevParticipants => {
+        // Check if participant already exists
+        if (prevParticipants.some(p => p.id === peerId)) {
+          return prevParticipants;
+        }
+        return [
+          ...prevParticipants,
+          { id: peerId, userId, name: userName || `User ${peerId.slice(0, 4)}` }
+        ];
+      });
+
+      if (isHost && peerConnection.current) {
+        console.log('Creating offer for new peer:', peerId);
+        await createAndSendOffer(peerId);
+      }
+    });
+
+    socketRef.current.on('user-left', ({ peerId }) => {
+      if (!isComponentMounted) return;
+
+      console.log('User left:', peerId);
+      setParticipants(prevParticipants => 
+        prevParticipants.filter(p => p.id !== peerId)
+      );
+
+      // Recreate data channel if needed
+      if (peerConnection.current?.connectionState === 'connected') {
+        createDataChannel();
+      }
+    });
+
+    socketRef.current.on('signal', async ({ from, signal }) => {
+      if (!isComponentMounted) return;
+
+      try {
+        if (!peerConnection.current) {
+          console.error('Peer connection not initialized');
+          return;
+        }
+
+        console.log('Received signal:', signal.type, 'from:', from);
+
+        if (signal.type === 'offer') {
+          if (peerConnection.current.signalingState !== 'stable') {
+            console.log('Connection not stable, waiting...');
+            return;
+          }
+          await peerConnection.current.setRemoteDescription(new RTCSessionDescription(signal));
+          const answer = await peerConnection.current.createAnswer();
+          await peerConnection.current.setLocalDescription(answer);
+          socketRef.current.emit('signal', {
+            to: from,
+            signal: answer,
+            roomId: urlRoomId
+          });
+          console.log('Sent answer to peer:', from);
+          // Create data channel after sending answer
+          setTimeout(() => {
+            if (peerConnection.current?.connectionState === 'connected' && !dataChannelRef.current) {
+              createDataChannel();
+            }
+          }, 1000);
+        } else if (signal.type === 'answer') {
+          if (peerConnection.current.signalingState !== 'have-local-offer') {
+            console.log('Connection not in have-local-offer state');
+            return;
+          }
+          await peerConnection.current.setRemoteDescription(new RTCSessionDescription(signal));
+          console.log('Set remote description from answer');
+          // Create data channel after receiving answer
+          setTimeout(() => {
+            if (peerConnection.current?.connectionState === 'connected' && !dataChannelRef.current) {
+              createDataChannel();
+            }
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Error handling signal:', error);
+        if (isComponentMounted) {
+          toast.error('Failed to establish connection');
+        }
+      }
+    });
+
+    socketRef.current.on('ice-candidate', async ({ from, candidate }) => {
+      if (!isComponentMounted) return;
+
+      try {
+        if (peerConnection.current && peerConnection.current.remoteDescription) {
+          await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+      } catch (error) {
+        console.error('Error adding ICE candidate:', error);
+      }
+    });
+
+    return () => {
+      isComponentMounted = false;
+
+      // Clean up socket listeners
+      if (socketRef.current) {
+        socketRef.current.off('room-info');
+        socketRef.current.off('user-joined');
+        socketRef.current.off('user-left');
+        socketRef.current.off('signal');
+        socketRef.current.off('ice-candidate');
+        socketRef.current.disconnect();
+      }
+
+      // Clean up audio analysis
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContext) {
+        audioContext.close();
+      }
+
+      // Clean up media streams
+      if (localStream.current) {
+        localStream.current.getTracks().forEach(track => track.stop());
+      }
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+
+      // Clean up peer connection
+      if (peerConnection.current) {
+        peerConnection.current.close();
+      }
     };
+  }, [user, urlRoomId, navigate, isHost]);
 
-    const setupPeerConnection = (stream) => {
+  // Setup peer connection
+  const setupPeerConnection = async (stream) => {
+    try {
+      // Get ICE servers from localStorage or use defaults
+      const storedIceServers = localStorage.getItem('iceServers');
+      const iceServers = storedIceServers ? JSON.parse(storedIceServers) : [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+      ];
+
       const configuration = {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' }
-        ]
+        iceServers,
+        iceCandidatePoolSize: 10,
+        iceTransportPolicy: 'all',
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require'
       };
 
+      // Close existing peer connection if any
+      if (peerConnection.current) {
+        peerConnection.current.close();
+        peerConnection.current = null;
+      }
+
+      console.log('Creating new peer connection with configuration:', configuration);
       peerConnection.current = new RTCPeerConnection(configuration);
 
-      // Create data channel for signaling
-      dataChannelRef.current = peerConnection.current.createDataChannel('signaling');
-      dataChannelRef.current.onmessage = handleDataChannelMessage;
-      dataChannelRef.current.onopen = () => {
-        console.log('Data channel opened');
-      };
-
+      // Add local stream tracks
       stream.getTracks().forEach(track => {
         peerConnection.current.addTrack(track, stream);
       });
 
+      // Handle incoming tracks
       peerConnection.current.ontrack = (event) => {
+        console.log('Received remote track:', event.track.kind);
         setRemoteStream(event.streams[0]);
         if (remoteVideoRef.current) {
           remoteVideoRef.current.srcObject = event.streams[0];
         }
       };
 
+      // Handle ICE candidates
       peerConnection.current.onicecandidate = (event) => {
-        if (event.candidate) {
-          // Send the candidate to the remote peer through your signaling server
-          console.log('New ICE candidate:', event.candidate);
+        if (event.candidate && socketRef.current?.connected) {
+          socketRef.current.emit('ice-candidate', {
+            to: roomId,
+            candidate: event.candidate,
+            roomId: urlRoomId
+          });
         }
       };
+
+      // Handle connection state changes
+      peerConnection.current.onconnectionstatechange = () => {
+        console.log('Connection state:', peerConnection.current?.connectionState);
+        if (peerConnection.current?.connectionState === 'connected') {
+          console.log('Peer connection established');
+          // Create data channel for both host and non-host
+          setTimeout(() => createDataChannel(), 1000);
+        } else if (peerConnection.current?.connectionState === 'disconnected' || 
+                  peerConnection.current?.connectionState === 'failed') {
+          console.log('Connection lost, attempting to reconnect...');
+          // Attempt to recreate peer connection
+          setTimeout(() => setupPeerConnection(stream), 2000);
+        }
+      };
+
+      // Handle data channel creation
+      peerConnection.current.ondatachannel = (event) => {
+        console.log('Received data channel from peer');
+        setupDataChannel(event.channel);
+      };
+
+      // Create data channel immediately for host
+      if (isHost) {
+        console.log('Creating data channel as host');
+        setTimeout(() => createDataChannel(), 1000);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error setting up peer connection:', error);
+      toast.error('Failed to establish connection');
+      return false;
+    }
+  };
+
+  // Function to create data channel
+  const createDataChannel = () => {
+    if (!peerConnection.current) {
+      console.log('Cannot create data channel: peer connection not initialized');
+      return;
+    }
+
+    // Check if we already have an open data channel
+    if (dataChannelRef.current && dataChannelRef.current.readyState === 'open') {
+      console.log('Data channel already open, skipping creation');
+      return;
+    }
+
+    // Close existing data channel if any
+    if (dataChannelRef.current) {
+      console.log('Closing existing data channel');
+      dataChannelRef.current.close();
+      dataChannelRef.current = null;
+    }
+
+    console.log('Creating data channel');
+    try {
+      const dataChannel = peerConnection.current.createDataChannel('chat', {
+        ordered: true,
+        maxRetransmits: 3,
+        protocol: 'json'
+      });
+      setupDataChannel(dataChannel);
+    } catch (error) {
+      console.error('Error creating data channel:', error);
+      // Only try again if the error is not "already exists"
+      if (!error.message.includes('already exists')) {
+        setTimeout(() => createDataChannel(), 1000);
+      }
+    }
+  };
+
+  // Function to setup data channel
+  const setupDataChannel = (channel) => {
+    console.log('Setting up data channel with state:', channel.readyState);
+    dataChannelRef.current = channel;
+
+    channel.onopen = () => {
+      console.log('Data channel opened with state:', channel.readyState);
+      // Send a test message to verify connection
+      try {
+        const testMessage = JSON.stringify({
+          type: 'system',
+          message: 'Data channel connected',
+          timestamp: new Date().toISOString()
+        });
+        console.log('Sending test message:', testMessage);
+        channel.send(testMessage);
+      } catch (error) {
+        console.error('Error sending test message:', error);
+      }
+
+      // Send any queued messages
+      if (channel.messageQueue && channel.messageQueue.length > 0) {
+        console.log('Sending queued messages:', channel.messageQueue.length);
+        while (channel.messageQueue.length > 0) {
+          const message = channel.messageQueue.shift();
+          try {
+            console.log('Sending queued message:', message);
+            channel.send(message);
+          } catch (error) {
+            console.error('Error sending queued message:', error);
+            // Put the message back in the queue
+            channel.messageQueue.unshift(message);
+            break;
+          }
+        }
+      }
     };
 
-    initializeMedia();
-
-    return () => {
-      clearTimeout(animationTimer);
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+    channel.onclose = () => {
+      console.log('Data channel closed with state:', channel.readyState);
+      // Only clear the reference if it's the same channel
+      if (dataChannelRef.current === channel) {
+        dataChannelRef.current = null;
+        // Only attempt to recreate if the peer connection is still connected
+        if (peerConnection.current?.connectionState === 'connected') {
+          console.log('Attempting to recreate data channel');
+          // Add a delay to prevent rapid recreation attempts
+          setTimeout(() => {
+            if (peerConnection.current?.connectionState === 'connected' && !dataChannelRef.current) {
+              createDataChannel();
+            }
+          }, 2000);
+        }
       }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-      cleanupResources();
     };
-  }, [user, navigate, roomId]);
+
+    channel.onerror = (error) => {
+      console.error('Data channel error:', error);
+      // Only attempt to recreate if the peer connection is still connected
+      if (peerConnection.current?.connectionState === 'connected') {
+        setTimeout(() => {
+          if (peerConnection.current?.connectionState === 'connected' && !dataChannelRef.current) {
+            createDataChannel();
+          }
+        }, 2000);
+      }
+    };
+
+    channel.onmessage = (event) => {
+      console.log('Received message on data channel:', event.data);
+      try {
+        const data = JSON.parse(event.data);
+        console.log('Parsed message data:', data);
+        
+        if (data.type === 'chat') {
+          console.log('Processing chat message:', data.message);
+          setMessages(prevMessages => {
+            const newMessages = [...prevMessages, data.message];
+            console.log('Updated messages:', newMessages);
+            return newMessages;
+          });
+          // Scroll to bottom of chat
+          if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+          }
+        } else if (data.type === 'system') {
+          console.log('System message:', data.message);
+        }
+      } catch (error) {
+        console.error('Error parsing message:', error);
+      }
+    };
+
+    // Initialize message queue
+    channel.messageQueue = [];
+  };
+
+  // Function to create and send offer
+  const createAndSendOffer = async (peerId) => {
+    try {
+      if (!peerConnection.current) {
+        console.error('Peer connection not initialized');
+        return;
+      }
+
+      console.log('Creating offer for peer:', peerId);
+      const offer = await peerConnection.current.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
+      await peerConnection.current.setLocalDescription(offer);
+      socketRef.current.emit('signal', {
+        to: peerId,
+        signal: offer,
+        roomId: urlRoomId
+      });
+      console.log('Sent offer to peer:', peerId);
+    } catch (error) {
+      console.error('Error creating offer:', error);
+    }
+  };
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    // Check if peer connection is ready
+    if (!peerConnection.current) {
+      console.log('Cannot send message: peer connection not initialized');
+      toast.error('Connection not ready. Please wait...');
+      return;
+    }
+
+    if (peerConnection.current.connectionState !== 'connected') {
+      console.log('Cannot send message: peer connection not connected');
+      toast.error('Connection not established. Please wait...');
+      return;
+    }
+
+    const message = {
+      id: Date.now(),
+      text: newMessage,
+      sender: user?.displayName || 'You',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    console.log('Preparing to send message:', message);
+
+    // Add message to local state
+    setMessages(prevMessages => [...prevMessages, message]);
+    
+    const messageString = JSON.stringify({
+      type: 'chat',
+      message: message
+    });
+
+    console.log('Message string to send:', messageString);
+
+    // Try to send through data channel
+    if (dataChannelRef.current) {
+      console.log('Data channel state:', dataChannelRef.current.readyState);
+      if (dataChannelRef.current.readyState === 'open') {
+        console.log('Sending message through data channel');
+        try {
+          dataChannelRef.current.send(messageString);
+          console.log('Message sent successfully');
+        } catch (error) {
+          console.error('Error sending message:', error);
+          // Queue message if send fails
+          if (!dataChannelRef.current.messageQueue) {
+            dataChannelRef.current.messageQueue = [];
+          }
+          dataChannelRef.current.messageQueue.push(messageString);
+          console.log('Message queued due to send error');
+        }
+      } else {
+        console.log('Data channel not open, queueing message');
+        if (!dataChannelRef.current.messageQueue) {
+          dataChannelRef.current.messageQueue = [];
+        }
+        dataChannelRef.current.messageQueue.push(messageString);
+        console.log('Message queued, queue length:', dataChannelRef.current.messageQueue.length);
+        // Attempt to recreate data channel if it's not open
+        if (peerConnection.current?.connectionState === 'connected') {
+          console.log('Attempting to recreate data channel for queued message');
+          setTimeout(() => createDataChannel(), 1000);
+        }
+      }
+    } else {
+      console.log('Creating data channel for message');
+      createDataChannel();
+      // Queue the message
+      if (!dataChannelRef.current) {
+        dataChannelRef.current = { messageQueue: [messageString] };
+      } else {
+        dataChannelRef.current.messageQueue = [messageString];
+      }
+      console.log('Message queued for new data channel');
+    }
+
+    setNewMessage('');
+  };
 
   const handleDataChannelMessage = (event) => {
     const data = JSON.parse(event.data);
@@ -273,23 +820,20 @@ function WebRTCMeeting({ roomId }) {
   };
 
   const transferHost = () => {
-    if (isHost && participants.length > 1) {
-      // Find the next participant to become host
-      const currentHostIndex = participants.findIndex(p => p.id === user.uid);
-      const nextHostIndex = (currentHostIndex + 1) % participants.length;
-      const nextHost = participants[nextHostIndex];
+    if (!isHost || participants.length <= 1) return;
 
-      // Update host in localStorage
-      localStorage.setItem(`room_${roomId}_host`, nextHost.id);
+    const currentHostIndex = participants.findIndex(p => p.id === user.uid);
+    const nextHostIndex = (currentHostIndex + 1) % participants.length;
+    const nextHost = participants[nextHostIndex];
 
-      // Notify other participants through data channel
-      if (dataChannelRef.current && dataChannelRef.current.readyState === 'open') {
-        dataChannelRef.current.send(JSON.stringify({
-          type: 'host_transfer',
-          newHostId: nextHost.id,
-          isHost: false
-        }));
-      }
+    localStorage.setItem(`room_${urlRoomId}_host`, nextHost.id);
+
+    if (dataChannelRef.current?.readyState === 'open') {
+      dataChannelRef.current.send(JSON.stringify({
+        type: 'host_transfer',
+        newHostId: nextHost.id,
+        isHost: false
+      }));
     }
   };
 
@@ -300,57 +844,52 @@ function WebRTCMeeting({ roomId }) {
   }, [messages]);
 
   const cleanupResources = () => {
-    console.log("Cleaning up resources...");
-    
-    // Remove user from participants
-    const existingParticipants = JSON.parse(localStorage.getItem(`room_${roomId}_participants`) || '[]');
-    const updatedParticipants = existingParticipants.filter(p => p.id !== user.uid);
-    localStorage.setItem(`room_${roomId}_participants`, JSON.stringify(updatedParticipants));
-
-    // If host is leaving, transfer host role
-    if (isHost) {
-      transferHost();
+    if (socketRef.current) {
+      socketRef.current.disconnect();
     }
-    
-    // Stop all tracks in local stream
+
     if (localStream.current) {
       localStream.current.getTracks().forEach(track => {
         track.stop();
-        console.log("Stopped local track:", track.kind);
       });
       localStream.current = null;
     }
-    
-    // Stop all tracks in screen stream
+
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach(track => {
         track.stop();
-        console.log("Stopped screen track:", track.kind);
       });
       screenStreamRef.current = null;
     }
-    
-    // Close peer connection
+
     if (peerConnection.current) {
       peerConnection.current.close();
-      console.log("Closed peer connection");
       peerConnection.current = null;
     }
-    
-    // Clear video elements
+
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = null;
     }
+
+    const existingParticipants = JSON.parse(localStorage.getItem(`room_${urlRoomId}_participants`) || '[]');
+    const updatedParticipants = existingParticipants.filter(p => p.id !== user.uid);
+    localStorage.setItem(`room_${urlRoomId}_participants`, JSON.stringify(updatedParticipants));
+
+    if (isHost) {
+      transferHost();
+    }
   };
 
   const toggleMute = () => {
     if (localStream.current) {
       const audioTrack = localStream.current.getAudioTracks()[0];
-      audioTrack.enabled = !audioTrack.enabled;
-      setIsMuted(!audioTrack.enabled);
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsMuted(!audioTrack.enabled);
+      }
     }
   };
 
@@ -372,7 +911,7 @@ function WebRTCMeeting({ roomId }) {
             height: { ideal: 720 },
             aspectRatio: 16/9
           },
-          audio: false // Don't request audio here since we already have it
+          audio: false
         });
 
         // Get the video track from the new stream
@@ -425,9 +964,8 @@ function WebRTCMeeting({ roomId }) {
     } catch (error) {
       console.error('Error toggling video:', error);
       if (error.name === 'NotAllowedError') {
-        console.log('Camera access was denied');
+        toast.error('Camera access was denied');
       }
-      // Reset the video state in case of error
       setIsVideoOff(true);
     }
   };
@@ -442,23 +980,20 @@ function WebRTCMeeting({ roomId }) {
         audio: false
       });
       
-      // Get the track settings which include deviceId and other info
       const track = stream.getVideoTracks()[0];
       const settings = track.getSettings();
       
-      // Stop the stream since we only needed it to get the sources
       stream.getTracks().forEach(track => track.stop());
       
-      // Set the selected screen ID
       setSelectedScreenId(settings.deviceId);
       
-      // Get all available screen sources
       if ('getScreenDetails' in navigator) {
         const screens = await navigator.getScreenDetails();
         setScreenSources(screens.screens || []);
       }
     } catch (error) {
       console.error('Error getting screen sources:', error);
+      toast.error('Failed to get screen sources');
     }
   };
 
@@ -500,19 +1035,18 @@ function WebRTCMeeting({ roomId }) {
       setIsScreenSharing(true);
       setShowScreenDropdown(false);
 
-      // Replace video track in peer connection
       const videoTrack = screenStream.getVideoTracks()[0];
-      const sender = peerConnection.current.getSenders().find(s => s.track?.kind === 'video');
+      const sender = peerConnection.current?.getSenders().find(s => s.track?.kind === 'video');
       if (sender) {
-        sender.replaceTrack(videoTrack);
+        await sender.replaceTrack(videoTrack);
       }
 
-      // Handle screen share stop
       videoTrack.onended = () => {
         stopScreenShare();
       };
     } catch (error) {
       console.error('Error sharing screen:', error);
+      toast.error('Failed to start screen sharing');
     }
   };
 
@@ -522,63 +1056,31 @@ function WebRTCMeeting({ roomId }) {
       setScreenStream(null);
       setIsScreenSharing(false);
 
-      // Restore camera video track
       if (localStream.current) {
         const videoTrack = localStream.current.getVideoTracks()[0];
-        const sender = peerConnection.current.getSenders().find(s => s.track.kind === 'video');
-        if (sender) {
-          sender.replaceTrack(videoTrack);
+        const sender = peerConnection.current?.getSenders().find(s => s.track?.kind === 'video');
+        if (sender && videoTrack) {
+          sender.replaceTrack(videoTrack).catch(error => {
+            console.error('Error restoring video track:', error);
+          });
         }
       }
     }
   };
 
-  const handleSendMessage = (e) => {
-    e.preventDefault();
-    if (newMessage.trim()) {
-      const message = {
-        id: Date.now(),
-        text: newMessage,
-        sender: user?.displayName || 'You',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages([...messages, message]);
-      setNewMessage('');
-    }
-  };
-
   const exitMeeting = () => {
-    console.log("Exiting meeting...");
-    
     try {
-      // Play exit sound first
       playExitSound();
       
-      // Add a small delay to allow the sound to play
       setTimeout(() => {
-        // Clean up all resources
         cleanupResources();
         
-        // Remove user from participants
-        const existingParticipants = JSON.parse(localStorage.getItem(`room_${roomId}_participants`) || '[]');
-        const updatedParticipants = existingParticipants.filter(p => p.id !== user.uid);
-        localStorage.setItem(`room_${roomId}_participants`, JSON.stringify(updatedParticipants));
-
-        // If host is leaving, transfer host role
-        if (isHost) {
-          transferHost();
-        }
-
-        // Clear any room-specific data
-        localStorage.removeItem(`room_${roomId}_host`);
+        localStorage.removeItem(`room_${urlRoomId}_host`);
         
-        // Navigate to landing page
-        console.log("Navigating to landing page...");
         navigate('/', { replace: true });
-      }, 300); // Reduced from 500ms to 300ms for better responsiveness
+      }, 300);
     } catch (error) {
-      console.error("Error during exit:", error);
-      // Force navigation even if there's an error
+      console.error('Error during exit:', error);
       navigate('/', { replace: true });
     }
   };
@@ -603,6 +1105,7 @@ function WebRTCMeeting({ roomId }) {
         }
       } catch (error) {
         console.error('Error getting devices:', error);
+        toast.error('Failed to get media devices');
       }
     };
     
@@ -655,6 +1158,7 @@ function WebRTCMeeting({ roomId }) {
       setShowVideoDropdown(false);
     } catch (error) {
       console.error('Error switching video device:', error);
+      toast.error('Failed to switch camera');
     }
   };
 
@@ -701,23 +1205,26 @@ function WebRTCMeeting({ roomId }) {
       setShowAudioDropdown(false);
     } catch (error) {
       console.error('Error switching audio device:', error);
+      toast.error('Failed to switch microphone');
     }
   };
 
   const toggleAudioDropdown = () => {
     setShowAudioDropdown(!showAudioDropdown);
-    setShowVideoDropdown(false); // Close video dropdown when audio dropdown is toggled
+    setShowVideoDropdown(false);
+    setShowScreenDropdown(false);
   };
 
   const toggleVideoDropdown = () => {
     setShowVideoDropdown(!showVideoDropdown);
-    setShowAudioDropdown(false); // Close audio dropdown when video dropdown is toggled
+    setShowAudioDropdown(false);
+    setShowScreenDropdown(false);
   };
 
+  // Update grid layout when participants change
   useEffect(() => {
-    // Update grid layout based on number of participants
     const updateGridLayout = () => {
-      const totalParticipants = participants.length;
+      const totalParticipants = participants.length + 1; // +1 for local user
       if (totalParticipants <= 1) {
         setGridLayout('1x1');
       } else if (totalParticipants <= 4) {
@@ -741,41 +1248,9 @@ function WebRTCMeeting({ roomId }) {
     }
   };
 
-  // Function to generate a unique room code like Google Meet (abc-defg-hij)
-  const generateRoomCode = () => {
-    const chars = 'abcdefghijkmnpqrstuvwxyz'; // Removed confusing characters like 'l', 'o'
-    let code = '';
-    
-    // First part (3 characters)
-    for (let i = 0; i < 3; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    code += '-';
-    
-    // Middle part (4 characters)
-    for (let i = 0; i < 4; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    code += '-';
-    
-    // Last part (3 characters)
-    for (let i = 0; i < 3; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    
-    return code;
-  };
-
-  // Function to copy room code to clipboard
-  const copyRoomCode = async () => {
-    try {
-      // Get the current room code from localStorage or use the roomId prop
-      const currentRoomCode = localStorage.getItem('current_room_code') || roomId;
-      await navigator.clipboard.writeText(currentRoomCode);
-      console.log('Room code copied:', currentRoomCode);
-    } catch (err) {
-      console.error('Failed to copy room code:', err);
-    }
+  const copyRoomCode = () => {
+    navigator.clipboard.writeText(meetingCode);
+    toast.success('Meeting code copied to clipboard!');
   };
 
   return (
@@ -837,18 +1312,25 @@ function WebRTCMeeting({ roomId }) {
               </div>
 
               {/* Remote Videos */}
-              {participants.filter(participant => participant.id !== user?.uid).map((participant, index) => (
+              {participants.filter(participant => participant.id !== user?.uid).map((participant) => (
                 <div
                   key={participant.id}
                   className="relative bg-[#1E1E1E] rounded-2xl overflow-hidden"
                 >
-                  {/* Remote video content */}
                   <div className="w-full h-full flex items-center justify-center bg-[#1E1E1E]">
-                    <div className="w-32 h-32 rounded-full bg-purple-500 flex items-center justify-center text-5xl font-bold">
-                      {participant.name.charAt(0).toUpperCase()}
-                    </div>
+                    {remoteStream ? (
+                      <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 rounded-full bg-purple-500 flex items-center justify-center text-5xl font-bold">
+                        {participant.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                  {/* Participant Info */}
                   <div className="absolute bottom-4 left-4 bg-black/50 px-4 py-2 rounded-xl text-sm backdrop-blur-md">
                     <span className="font-sofia-medium">{participant.name}</span>
                   </div>
@@ -858,16 +1340,53 @@ function WebRTCMeeting({ roomId }) {
           </div>
         </div>
 
-        {/* Room Info Button */}
-        <button
-          onClick={copyRoomCode}
-          className="absolute top-4 left-4 bg-[#1E1E1E]/80 backdrop-blur-md px-4 py-2 rounded-xl text-sm hover:bg-[#2A2A2A]/80 transition-colors flex items-center gap-2"
-        >
-          <span className="font-sofia-medium">
-            Room: {localStorage.getItem('current_room_code') || roomId}
-          </span>
-          <FaCopy size={14} className="text-gray-400" />
-        </button>
+        {/* Room Info Button - Bottom Left */}
+        <div className="fixed bottom-4 left-4 z-50">
+          <div className="relative group">
+            <button
+              onClick={() => setShowRoomInfo(!showRoomInfo)}
+              className="p-4 rounded-2xl backdrop-blur-md bg-[#1E1E1E]/80 hover:bg-opacity-90 transition-all shadow-lg"
+              title="Meeting Info"
+            >
+              <FaInfoCircle size={20} />
+            </button>
+            {/* Room Info Modal */}
+            {showRoomInfo && (
+              <div className="absolute bottom-full left-0 mb-4 bg-[#1E1E1E]/95 backdrop-blur-md rounded-lg p-4 shadow-lg w-80">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Meeting Info</h3>
+                  <button
+                    onClick={() => setShowRoomInfo(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <FaTimes size={16} />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-400 mb-1">Meeting Code</p>
+                    <div className="flex items-center justify-between bg-[#2A2A2A] p-3 rounded">
+                      <code className="text-base font-mono text-white select-all tracking-wider">
+                        {meetingCode}
+                      </code>
+                      <button
+                        onClick={copyRoomCode}
+                        className="text-blue-400 hover:text-blue-300 transition-colors ml-3 p-1 hover:bg-[#3A3A3A] rounded"
+                        title="Copy meeting code"
+                      >
+                        <FaCopy size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    <p>Share this code with others to join the meeting</p>
+                    <p className="mt-2">People who have the meeting code can join anytime</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Controls with Glassmorphism */}
         <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-6 transition-all duration-500 delay-300 ${
@@ -1133,4 +1652,4 @@ function WebRTCMeeting({ roomId }) {
   );
 }
 
-export default WebRTCMeeting; 
+export default WebRTCMeeting;
