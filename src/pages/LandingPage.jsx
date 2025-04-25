@@ -5,21 +5,16 @@ import Solutions from "../components/landing/Solutions";
 import Pricing from "../components/landing/Pricing";
 import ContactUs from "../components/landing/ContactUs";
 import Footer from "../components/landing/Footer";
-import { useMenu } from '@/context/MenuContext';
 
 const LandingPage = () => {
-    const { isMobileMenuOpen } = useMenu();
-
     return (
         <>
             <Navbar />
-            <div className={`transition-all duration-300 ${isMobileMenuOpen ? 'blur-sm' : ''}`}>
-                <Hero />
-                <Solutions />
-                <Pricing />
-                <ContactUs />
-                <Footer />
-            </div>
+            <Hero />
+            <Solutions />
+            <Pricing />
+            <ContactUs />
+            <Footer />
         </>
     );
 };
