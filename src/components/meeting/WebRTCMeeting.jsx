@@ -26,6 +26,7 @@ import {
   PhoneXMarkIcon 
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Function to generate a random room ID
 const generateRoomId = () => {
@@ -56,6 +57,7 @@ function WebRTCMeeting() {
   const { roomId: urlRoomId } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [roomId, setRoomId] = useState('');
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
@@ -64,7 +66,7 @@ function WebRTCMeeting() {
   const [showRoomInfo, setShowRoomInfo] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [remoteStream, setRemoteStream] = useState(null);
+  const [remoteStreams, setRemoteStreams] = useState(new Map());
   const [screenStream, setScreenStream] = useState(null);
   const [isHost, setIsHost] = useState(false);
   const [participants, setParticipants] = useState([]);
@@ -519,11 +521,12 @@ function WebRTCMeeting() {
 
       // Handle incoming tracks
       peerConnection.current.ontrack = (event) => {
-        console.log('Received remote track:', event.track.kind);
-        setRemoteStream(event.streams[0]);
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = event.streams[0];
-        }
+        console.log('Received remote track:', event.track.kind, 'from peer:', event.streams[0].id);
+        setRemoteStreams(prevStreams => {
+          const newStreams = new Map(prevStreams);
+          newStreams.set(event.streams[0].id, event.streams[0]);
+          return newStreams;
+        });
       };
 
       // Handle ICE candidates
@@ -547,8 +550,10 @@ function WebRTCMeeting() {
         } else if (peerConnection.current?.connectionState === 'disconnected' || 
                   peerConnection.current?.connectionState === 'failed') {
           console.log('Connection lost, attempting to reconnect...');
+          // Clear remote streams before attempting to reconnect
+          setRemoteStreams(new Map());
           // Attempt to recreate peer connection
-          setTimeout(() => setupPeerConnection(stream), 2000);
+          setTimeout(() => setupPeerConnection(localStream.current), 2000);
         }
       };
 
@@ -870,12 +875,13 @@ function WebRTCMeeting() {
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = null;
-    }
 
-    const existingParticipants = JSON.parse(localStorage.getItem(`room_${urlRoomId}_participants`) || '[]');
-    const updatedParticipants = existingParticipants.filter(p => p.id !== user.uid);
+    // Clear all remote streams
+    setRemoteStreams(new Map());
+
+    // Update participants in localStorage
+    const participants = JSON.parse(localStorage.getItem(`room_${urlRoomId}_participants`) || '[]');
+    const updatedParticipants = participants.filter(p => p.id !== user.uid);
     localStorage.setItem(`room_${urlRoomId}_participants`, JSON.stringify(updatedParticipants));
 
     if (isHost) {
@@ -1225,7 +1231,9 @@ function WebRTCMeeting() {
   useEffect(() => {
     const updateGridLayout = () => {
       const totalParticipants = participants.length + 1; // +1 for local user
-      if (totalParticipants <= 1) {
+      if (isMobile) {
+        setGridLayout('1x1');
+      } else if (totalParticipants <= 1) {
         setGridLayout('1x1');
       } else if (totalParticipants <= 4) {
         setGridLayout('2x2');
@@ -1235,9 +1243,12 @@ function WebRTCMeeting() {
     };
 
     updateGridLayout();
-  }, [participants]);
+  }, [participants, isMobile]);
 
   const getGridClassName = () => {
+    if (isMobile) {
+      return 'grid-cols-1 gap-2';
+    }
     switch (gridLayout) {
       case '2x2':
         return 'grid-cols-2 gap-4';
@@ -1257,16 +1268,16 @@ function WebRTCMeeting() {
     <div className="min-h-screen bg-[#121212] text-white">
       <div className="h-screen flex flex-col">
         {/* Main Content Area */}
-        <div className={`flex-1 transition-all duration-300 ${isChatOpen ? 'md:w-3/4' : 'w-full'}`} 
+        <div className={`flex-1 transition-all duration-300 ${isChatOpen && !isMobile ? 'md:w-3/4' : 'w-full'}`} 
              style={{ 
-               height: 'calc(98vh - 5rem)',
-               marginTop: '0.5rem'
+               height: isMobile ? 'calc(100vh - 5rem)' : 'calc(98vh - 5rem)',
+               marginTop: isMobile ? 0 : '0.5rem'
              }}>
-          <div className="h-full p-8 pb-20">
+          <div className="h-full p-2 sm:p-8 pb-20">
             {/* Video Grid Container */}
-            <div className={`grid ${getGridClassName()} h-full max-w-7xl mx-auto`}>
+            <div className={`grid ${getGridClassName()} h-full max-w-7xl mx-auto gap-2 sm:gap-4`}>
               {/* Local Video */}
-              <div className={`relative bg-[#1E1E1E] rounded-2xl overflow-hidden transform transition-all duration-500 shadow-[0_0_75px_-30px_rgba(255,255,255,0.25)] ${
+              <div className={`relative bg-[#1E1E1E] rounded-xl sm:rounded-2xl overflow-hidden transform transition-all duration-500 shadow-[0_0_75px_-30px_rgba(255,255,255,0.25)] ${
                 isJoining ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
               }`}>
                 {!isVideoOff ? (
@@ -1298,14 +1309,14 @@ function WebRTCMeeting() {
                           ))}
                         </>
                       )}
-                      <div className="w-32 h-32 rounded-full bg-blue-500 flex items-center justify-center text-5xl font-bold relative z-10">
+                      <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-full bg-blue-500 flex items-center justify-center text-3xl sm:text-5xl font-bold relative z-10">
                         {(user?.displayName || 'You').charAt(0).toUpperCase()}
                       </div>
                     </div>
                   </div>
                 )}
                 {/* Participant Info */}
-                <div className="absolute bottom-4 left-4 bg-black/50 px-4 py-2 rounded-xl text-sm backdrop-blur-md flex items-center gap-3">
+                <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-black/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm backdrop-blur-md flex items-center gap-2 sm:gap-3">
                   <span className="font-sofia-medium">{user?.displayName || 'You'}</span>
                   {isHost && <span className="text-blue-400 font-sofia-light">(Host)</span>}
                 </div>
@@ -1315,23 +1326,23 @@ function WebRTCMeeting() {
               {participants.filter(participant => participant.id !== user?.uid).map((participant) => (
                 <div
                   key={participant.id}
-                  className="relative bg-[#1E1E1E] rounded-2xl overflow-hidden"
+                  className="relative bg-[#1E1E1E] rounded-xl sm:rounded-2xl overflow-hidden"
                 >
                   <div className="w-full h-full flex items-center justify-center bg-[#1E1E1E]">
-                    {remoteStream ? (
+                    {remoteStreams.has(participant.id) ? (
                       <video
-                        ref={remoteVideoRef}
                         autoPlay
                         playsInline
                         className="w-full h-full object-cover"
+                        srcObject={remoteStreams.get(participant.id)}
                       />
                     ) : (
-                      <div className="w-32 h-32 rounded-full bg-purple-500 flex items-center justify-center text-5xl font-bold">
+                      <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-full bg-purple-500 flex items-center justify-center text-3xl sm:text-5xl font-bold">
                         {participant.name.charAt(0).toUpperCase()}
                       </div>
                     )}
                   </div>
-                  <div className="absolute bottom-4 left-4 bg-black/50 px-4 py-2 rounded-xl text-sm backdrop-blur-md">
+                  <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 bg-black/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm backdrop-blur-md">
                     <span className="font-sofia-medium">{participant.name}</span>
                   </div>
                 </div>
@@ -1340,287 +1351,190 @@ function WebRTCMeeting() {
           </div>
         </div>
 
-        {/* Room Info Button - Bottom Left */}
-        <div className="fixed bottom-4 left-4 z-50">
-          <div className="relative group">
-            <button
-              onClick={() => setShowRoomInfo(!showRoomInfo)}
-              className="p-4 rounded-2xl backdrop-blur-md bg-[#1E1E1E]/80 hover:bg-opacity-90 transition-all shadow-lg"
-              title="Meeting Info"
-            >
-              <FaInfoCircle size={20} />
-            </button>
-            {/* Room Info Modal */}
-            {showRoomInfo && (
-              <div className="absolute bottom-full left-0 mb-4 bg-[#1E1E1E]/95 backdrop-blur-md rounded-lg p-4 shadow-lg w-80">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">Meeting Info</h3>
-                  <button
-                    onClick={() => setShowRoomInfo(false)}
-                    className="text-gray-400 hover:text-white"
-                  >
-                    <FaTimes size={16} />
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-400 mb-1">Meeting Code</p>
-                    <div className="flex items-center justify-between bg-[#2A2A2A] p-3 rounded">
-                      <code className="text-base font-mono text-white select-all tracking-wider">
-                        {meetingCode}
-                      </code>
-                      <button
-                        onClick={copyRoomCode}
-                        className="text-blue-400 hover:text-blue-300 transition-colors ml-3 p-1 hover:bg-[#3A3A3A] rounded"
-                        title="Copy meeting code"
-                      >
-                        <FaCopy size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    <p>Share this code with others to join the meeting</p>
-                    <p className="mt-2">People who have the meeting code can join anytime</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Controls with Glassmorphism */}
-        <div className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-6 transition-all duration-500 delay-300 ${
-          isJoining ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+        {/* Video Controls - Bottom Bar */}
+        <div className={`fixed bottom-0 left-0 right-0 px-4 py-6 bg-gradient-to-t from-black/50 to-transparent z-40 ${
+          showVideoDropdown || showAudioDropdown || showScreenDropdown ? 'z-50' : ''
         }`}>
-          <div className="relative group">
-            <div className="flex items-center">
-              <button
-                onClick={toggleMute}
-                className={`p-4 rounded-l-2xl backdrop-blur-md ${
-                  isMuted 
-                    ? 'bg-red-500/80' 
-                    : 'bg-[#1E1E1E]/80'
-                } hover:bg-opacity-90 transition-all shadow-lg`}
-                title={isMuted ? "Unmute" : "Mute"}
-              >
-                {isMuted ? <FaMicrophoneSlash size={20} /> : <FaMicrophone size={20} />}
-              </button>
-              <button
-                onClick={toggleAudioDropdown}
-                className={`h-full px-2 rounded-r-2xl backdrop-blur-md border-l border-gray-600/30 ${
-                  isMuted 
-                    ? 'bg-red-500/25' 
-                    : 'bg-[#1E1E1E]/25'
-                } hover:bg-opacity-90 transition-all`}
-              >
-                <div className={`transform transition-transform duration-200 ${showAudioDropdown ? 'rotate-180' : ''}`}>
-                  <FaChevronUp size={12} />
-                </div>
-              </button>
-            </div>
-            {showAudioDropdown && (
-              <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#1E1E1E]/90 backdrop-blur-md rounded-xl overflow-hidden shadow-lg">
-                <div className="p-2 border-b border-gray-700/50">
-                  <h3 className="text-sm font-sofia-medium">Select microphone</h3>
-                </div>
-                <div className="max-h-48 overflow-y-auto">
-                  {audioDevices.map(device => (
-                    <button
-                      key={device.deviceId}
-                      onClick={() => switchAudioDevice(device.deviceId)}
-                      className={`w-full p-2 text-left hover:bg-gray-700/50 transition-colors ${
-                        device.deviceId === selectedAudioDevice ? 'bg-blue-500/20' : ''
-                      }`}
-                    >
-                      <div className="text-sm font-sofia-light">{device.label || 'Microphone'}</div>
-                    </button>
-                  ))}
-                </div>
+          <div className="max-w-screen-xl mx-auto flex items-center justify-between gap-2">
+            {/* Left Side Controls */}
+            <div className="flex items-center gap-4">
+              {/* Mute Control */}
+              <div className="relative">
+                <button
+                  onClick={toggleMute}
+                  className={`p-3 rounded-full backdrop-blur-md ${
+                    isMuted 
+                      ? 'bg-red-500/90' 
+                      : 'bg-white/10 hover:bg-white/20'
+                  } transition-all`}
+                  title={isMuted ? "Unmute" : "Mute"}
+                >
+                  {isMuted ? <FaMicrophoneSlash size={20} /> : <FaMicrophone size={20} />}
+                </button>
               </div>
-            )}
-          </div>
-          
-          <div className="relative group">
-            <div className="flex items-center">
-              <button
-                onClick={toggleVideo}
-                className={`p-4 rounded-l-2xl backdrop-blur-md ${
-                  isVideoOff 
-                    ? 'bg-red-500/80' 
-                    : 'bg-[#1E1E1E]/80'
-                } hover:bg-opacity-90 transition-all shadow-lg`}
-                title={isVideoOff ? "Turn on camera" : "Turn off camera"}
-              >
-                {isVideoOff ? <FaVideoSlash size={20} /> : <FaVideo size={20} />}
-              </button>
-              <button
-                onClick={toggleVideoDropdown}
-                className={`h-full px-2 rounded-r-2xl backdrop-blur-md border-l border-gray-600/30 ${
-                  isVideoOff 
-                    ? 'bg-red-500/25' 
-                    : 'bg-[#1E1E1E]/25'
-                } hover:bg-opacity-90 transition-all`}
-              >
-                <div className={`transform transition-transform duration-200 ${showVideoDropdown ? 'rotate-180' : ''}`}>
-                  <FaChevronUp size={12} />
-                </div>
-              </button>
-            </div>
-            {showVideoDropdown && (
-              <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#1E1E1E]/90 backdrop-blur-md rounded-xl overflow-hidden shadow-lg">
-                <div className="p-2 border-b border-gray-700/50">
-                  <h3 className="text-sm font-sofia-medium">Select camera</h3>
-                </div>
-                <div className="max-h-48 overflow-y-auto">
-                  {videoDevices.map(device => (
-                    <button
-                      key={device.deviceId}
-                      onClick={() => switchVideoDevice(device.deviceId)}
-                      className={`w-full p-2 text-left hover:bg-gray-700/50 transition-colors ${
-                        device.deviceId === selectedVideoDevice ? 'bg-blue-500/20' : ''
-                      }`}
-                    >
-                      <div className="text-sm font-sofia-light">{device.label || 'Camera'}</div>
-                    </button>
-                  ))}
-                </div>
+
+              {/* Video Control */}
+              <div className="relative">
+                <button
+                  onClick={toggleVideo}
+                  className={`p-3 rounded-full backdrop-blur-md ${
+                    isVideoOff 
+                      ? 'bg-red-500/90' 
+                      : 'bg-white/10 hover:bg-white/20'
+                  } transition-all`}
+                  title={isVideoOff ? "Turn on camera" : "Turn off camera"}
+                >
+                  {isVideoOff ? <FaVideoSlash size={20} /> : <FaVideo size={20} />}
+                </button>
               </div>
-            )}
-          </div>
-          
-          <div className="relative group">
-            <div className="flex items-center">
+
+              {/* Screen Share Control */}
+              <div className="relative">
+                <button
+                  onClick={isScreenSharing ? stopScreenShare : toggleScreenDropdown}
+                  className={`p-3 rounded-full backdrop-blur-md ${
+                    isScreenSharing 
+                      ? 'bg-blue-500/90' 
+                      : 'bg-white/10 hover:bg-white/20'
+                  } transition-all`}
+                  title={isScreenSharing ? "Stop sharing" : "Share screen"}
+                >
+                  {isScreenSharing ? <FaStop size={20} /> : <FaDesktop size={20} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Right Side Controls */}
+            <div className="flex items-center gap-4">
+              {/* Chat Toggle */}
               <button
-                onClick={isScreenSharing ? stopScreenShare : toggleScreenDropdown}
-                className={`p-4 rounded-l-2xl backdrop-blur-md ${
-                  isScreenSharing 
-                    ? 'bg-blue-500/80' 
-                    : 'bg-[#1E1E1E]/80'
-                } hover:bg-opacity-90 transition-all shadow-lg`}
-                title={isScreenSharing ? "Stop sharing" : "Share screen"}
+                onClick={() => setIsChatOpen(!isChatOpen)}
+                className={`p-3 rounded-full backdrop-blur-md ${
+                  isChatOpen 
+                    ? 'bg-blue-500/90' 
+                    : 'bg-white/10 hover:bg-white/20'
+                } transition-all`}
+                title={isChatOpen ? "Close chat" : "Open chat"}
               >
-                {isScreenSharing ? <FaStop size={20} /> : <FaDesktop size={20} />}
+                <FaComments size={20} />
               </button>
+
+              {/* Meeting Info */}
               <button
-                onClick={toggleScreenDropdown}
-                className={`h-full px-2 rounded-r-2xl backdrop-blur-md border-l border-gray-600/30 ${
-                  isScreenSharing 
-                    ? 'bg-blue-500/25' 
-                    : 'bg-[#1E1E1E]/25'
-                } hover:bg-opacity-90 transition-all`}
+                onClick={() => setShowRoomInfo(!showRoomInfo)}
+                className="p-3 rounded-full backdrop-blur-md bg-white/10 hover:bg-white/20 transition-all"
+                title="Meeting Info"
               >
-                <div className={`transform transition-transform duration-200 ${showScreenDropdown ? 'rotate-180' : ''}`}>
-                  <FaChevronUp size={12} />
-                </div>
+                <FaInfoCircle size={20} />
+              </button>
+
+              {/* End Call */}
+              <button
+                onClick={exitMeeting}
+                className="p-3 rounded-full bg-red-500/90 hover:bg-red-600/90 transition-all"
+                title="Leave meeting"
+              >
+                <FaSignOutAlt size={20} />
               </button>
             </div>
-            {showScreenDropdown && (
-              <div className="absolute bottom-full left-0 mb-2 w-80 bg-[#1E1E1E]/90 backdrop-blur-md rounded-xl overflow-hidden shadow-lg">
-                <div className="p-3 border-b border-gray-700/50">
-                  <h3 className="text-sm font-sofia-medium">Select what to share</h3>
-                </div>
-                <div className="p-3 space-y-3">
-                  <div className="space-y-2">
-                    <h4 className="text-xs text-gray-400 font-sofia-medium">Your entire screen</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {screenSources.map((source, index) => (
-                        <button
-                          key={source.id || index}
-                          onClick={() => startScreenShare(source.id)}
-                          className="p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors group"
-                        >
-                          <div className="aspect-video bg-gray-900/50 rounded-md mb-2 flex items-center justify-center">
-                            <FaDesktop size={24} className="text-gray-400 group-hover:text-white transition-colors" />
-                          </div>
-                          <div className="text-sm font-sofia-light truncate">
-                            {source.label || `Screen ${index + 1}`}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+          </div>
+
+          {/* Dropdowns and Modals */}
+          {showRoomInfo && (
+            <div className="absolute bottom-full left-4 right-4 mb-4 bg-[#1E1E1E]/95 backdrop-blur-md rounded-2xl p-4 shadow-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Meeting Info</h3>
+                <button
+                  onClick={() => setShowRoomInfo(false)}
+                  className="text-gray-400 hover:text-white p-2"
+                >
+                  <FaTimes size={20} />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-gray-400">Meeting ID</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="text"
+                      value={roomId}
+                      readOnly
+                      className="flex-1 bg-[#2A2A2A] rounded-xl px-4 py-3 text-sm font-mono"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(roomId);
+                        toast.success('Meeting ID copied');
+                      }}
+                      className="p-3 hover:bg-[#2A2A2A] rounded-xl transition-colors"
+                      title="Copy meeting ID"
+                    >
+                      <FaCopy size={20} />
+                    </button>
                   </div>
-                  <div className="space-y-2">
-                    <h4 className="text-xs text-gray-400 font-sofia-medium">A window</h4>
+                </div>
+                <div>
+                  <label className="text-sm text-gray-400">Meeting Link</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="text"
+                      value={window.location.href}
+                      readOnly
+                      className="flex-1 bg-[#2A2A2A] rounded-xl px-4 py-3 text-sm font-mono truncate"
+                    />
                     <button
-                      onClick={() => startScreenShare()}
-                      className="w-full p-3 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors flex items-center gap-3"
+                      onClick={() => {
+                        navigator.clipboard.writeText(window.location.href);
+                        toast.success('Meeting link copied');
+                      }}
+                      className="p-3 hover:bg-[#2A2A2A] rounded-xl transition-colors"
+                      title="Copy meeting link"
                     >
-                      <div className="w-10 h-10 rounded-md bg-gray-900/50 flex items-center justify-center">
-                        <FaDesktop size={20} className="text-gray-400" />
-                      </div>
-                      <div className="text-sm font-sofia-light">
-                        Choose a window to share
-                      </div>
+                      <FaCopy size={20} />
                     </button>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
-          
-          <button
-            onClick={() => setIsChatOpen(!isChatOpen)}
-            className={`p-4 rounded-2xl backdrop-blur-md ${
-              isChatOpen 
-                ? 'bg-blue-500/80' 
-                : 'bg-[#1E1E1E]/80'
-            } hover:bg-opacity-90 transition-all shadow-lg`}
-            title={isChatOpen ? "Close chat" : "Open chat"}
-          >
-            <FaComments size={20} />
-          </button>
-          
-          <button
-            onClick={exitMeeting}
-            className="p-4 rounded-2xl bg-red-500/80 backdrop-blur-md hover:bg-opacity-90 transition-all shadow-lg"
-            title="Leave meeting"
-          >
-            <FaSignOutAlt size={20} />
-          </button>
+            </div>
+          )}
         </div>
 
-        {/* Chat Sidebar with Animation */}
+        {/* Chat Sidebar */}
         <div 
-          className={`fixed top-0 right-0 h-full w-96 bg-[#1E1E1E]/80 backdrop-blur-md rounded-l-2xl overflow-hidden flex flex-col transition-all duration-300 ease-in-out transform ${
+          className={`fixed top-0 right-0 h-full ${isMobile ? 'w-full' : 'w-96'} bg-[#1E1E1E]/95 backdrop-blur-md ${
+            isMobile ? '' : 'rounded-l-2xl'
+          } overflow-hidden flex flex-col transition-all duration-300 ease-in-out transform ${
             isChatOpen 
               ? 'translate-x-0 opacity-100' 
               : 'translate-x-full opacity-0'
           }`}
           style={{
-            zIndex: 10,
-            marginTop: '2rem',
-            marginBottom: '3rem',
-            height: 'calc(96vh - 5rem)',
-            marginRight: '0.2rem'
+            zIndex: 45,
+            height: '100%',
           }}
         >
-          <div className="p-6 border-b border-gray-700/50 flex justify-between items-center">
-            <h3 className="font-sofia-medium">Meeting Chat</h3>
+          <div className="p-4 border-b border-gray-700/50 flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Meeting Chat</h3>
             <button 
               onClick={() => setIsChatOpen(false)}
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-white p-2"
             >
-              <FaTimes />
+              <FaTimes size={20} />
             </button>
           </div>
           <div 
             ref={chatContainerRef}
-            className="flex-1 p-6 overflow-y-auto space-y-4"
-            style={{
-              maxHeight: 'calc(100% - 120px)',
-              overflowY: 'auto',
-              overflowX: 'hidden'
-            }}
+            className="flex-1 p-4 overflow-y-auto space-y-4"
           >
             {messages.map((message) => (
               <div key={message.id} className="space-y-1">
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm flex-shrink-0">
                     {message.sender.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-sofia-medium text-sm truncate">{message.sender}</span>
+                      <span className="font-semibold text-sm truncate">{message.sender}</span>
                       <span className="text-xs text-gray-400">{message.timestamp}</span>
                     </div>
                     <p className="text-sm text-gray-300 break-words">{message.text}</p>
@@ -1636,11 +1550,11 @@ function WebRTCMeeting() {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message..."
-                className="flex-1 bg-[#2A2A2A]/80 backdrop-blur-sm text-white rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-sofia-light"
+                className="flex-1 bg-[#2A2A2A]/80 backdrop-blur-sm text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="submit"
-                className="bg-blue-500/80 backdrop-blur-sm hover:bg-opacity-90 text-white rounded-xl px-4 py-2 text-sm transition-colors font-sofia-medium"
+                className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-4 py-3 text-sm transition-colors"
               >
                 Send
               </button>
