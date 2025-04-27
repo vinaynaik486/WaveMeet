@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_SERVER_URL = import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:3001'; // Update this with your server URL
+const SOCKET_SERVER_URL = 'http://localhost:3001'; // Update this with your server URL
 
 export const socket = io(SOCKET_SERVER_URL, {
     autoConnect: true,
