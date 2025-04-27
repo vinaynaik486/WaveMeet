@@ -35,12 +35,28 @@ function Solutions() {
       <div id="solutions" className='mt-14 mx-4 md:mx-16 lg:mx-28 mb-10 flex flex-col lg:flex-row gap-10 lg:gap-48'>
         <div className='flex items-center justify-center gap-8'>
           <div>
-            <img src={Person1} alt="Person 1" className='w-full max-w-[21rem] rounded-lg shadow-lg dark:shadow-[rgba(255,255,255,0.08)]' />
-            <img src={Person2} alt="Person 2" className='w-full max-w-[21rem] rounded-lg mt-8 shadow-lg dark:shadow-[rgba(255,255,255,0.08)]' />
+            <img 
+              src={Person1} 
+              alt="Person 1" 
+              className='w-full max-w-[16rem] sm:max-w-[18rem] md:max-w-[20rem] lg:max-w-[22rem] rounded-lg shadow-lg dark:shadow-[rgba(255,255,255,0.08)]' 
+            />
+            <img 
+              src={Person2} 
+              alt="Person 2" 
+              className='w-full max-w-[16rem] sm:max-w-[18rem] md:max-w-[20rem] lg:max-w-[22rem] rounded-lg mt-8 shadow-lg dark:shadow-[rgba(255,255,255,0.08)]' 
+            />
           </div>
           <div>
-            <img src={Person3} alt="Person 3" className='w-full max-w-[21rem] rounded-lg shadow-lg dark:shadow-[rgba(255,255,255,0.08)]' />
-            <img src={Person4} alt="Person 4" className='w-full max-w-[21rem] rounded-lg mt-8 shadow-lg dark:shadow-[rgba(255,255,255,0.08)]' />
+            <img 
+              src={Person3} 
+              alt="Person 3" 
+              className='w-full max-w-[16rem] sm:max-w-[18rem] md:max-w-[20rem] lg:max-w-[22rem] rounded-lg shadow-lg dark:shadow-[rgba(255,255,255,0.08)]' 
+            />
+            <img 
+              src={Person4} 
+              alt="Person 4" 
+              className='w-full max-w-[16rem] sm:max-w-[18rem] md:max-w-[20rem] lg:max-w-[22rem] rounded-lg mt-8 shadow-lg dark:shadow-[rgba(255,255,255,0.08)]' 
+            />
           </div>
         </div>
         <div className='lg:mr-6 font-medium'>

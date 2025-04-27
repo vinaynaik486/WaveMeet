@@ -228,11 +228,11 @@ function Hero() {
           </button>
         </form>
       </div>
-      <div className="reveal-text w-[64rem] max-w-[90%] sm:max-w-[80%] md:max-w-[100%] lg:mb-16">
+      <div className="reveal-text w-full max-w-[42rem] sm:max-w-[48rem] md:max-w-[56rem] lg:max-w-[64rem] xl:max-w-[72rem] mt-8 sm:mt-10 md:mt-12 lg:mt-16">
         <img
           src={HeroCover}
           alt="App UI Cover"
-          className="mt-8 sm:mt-10 md:mt-12 lg:mt-16 w-full rounded-xl shadow-[0_0_75px_-30px_rgba(0,0,0,0.75)] dark:shadow-[0_0_75px_-30px_rgba(255,255,255,0.25)] transform-gpu"
+          className="w-full h-auto rounded-xl shadow-[0_0_75px_-30px_rgba(0,0,0,0.75)] dark:shadow-[0_0_75px_-30px_rgba(255,255,255,0.25)] transform-gpu"
           loading="lazy"
           decoding="async"
         />
