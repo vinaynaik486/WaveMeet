@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: wavemeet-backend
+    env: node
+    buildCommand: npm install --production
+    startCommand: npm run server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+    healthCheckPath: /
+    autoDeploy: true
+    plan: free
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+
+  - type: web
+    name: wavemeet-frontend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: https://wavemeet-backend.onrender.com
+    healthCheckPath: /
+    autoDeploy: true
+    plan: free
+    scaling:
+      minInstances: 1
+      maxInstances: 1 
