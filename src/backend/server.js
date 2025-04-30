@@ -8,7 +8,11 @@ const server = createServer(app);
 
 // Configure CORS for both Express and Socket.IO
 const corsOptions = {
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+  origin: [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://wavemeet-frontend.onrender.com"
+  ],
   methods: ["GET", "POST"],
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
