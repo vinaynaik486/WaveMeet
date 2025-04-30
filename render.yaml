@@ -12,9 +12,6 @@ services:
     healthCheckPath: /
     autoDeploy: true
     plan: free
-    scaling:
-      minInstances: 1
-      maxInstances: 1
 
   - type: web
     name: wavemeet-frontend
@@ -28,8 +25,4 @@ services:
         value: https://wavemeet-backend.onrender.com
     healthCheckPath: /
     autoDeploy: true
-    plan: free
-    scaling:
-      minInstances: 1
-      maxInstances: 1 
-      
+    plan: free 
