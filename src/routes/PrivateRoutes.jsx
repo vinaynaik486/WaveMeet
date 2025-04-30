@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import MeetingRoom from '@/components/meeting/MeetingRoom';
+import WebRTCMeeting from '@/components/meeting/WebRTCMeeting';
 
 function PrivateRoutes() {
     const { user } = useAuth();
@@ -11,7 +11,7 @@ function PrivateRoutes() {
 
     return (
         <Routes>
-            <Route path="/meeting/:roomId" element={<MeetingRoom />} />
+            <Route path="/meeting/:roomId" element={<WebRTCMeeting />} />
             <Route path="*" element={<Navigate to="/" />} />
         </Routes>
     );
