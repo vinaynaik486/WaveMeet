@@ -5,7 +5,8 @@ import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
-    onAuthStateChanged
+    onAuthStateChanged,
+    updateProfile
 } from 'firebase/auth';
 
 export const authService = {
@@ -51,5 +52,11 @@ export const authService = {
 
     onAuthStateChanged: (callback) => {
         return onAuthStateChanged(auth, callback);
+    },
+    
+    updateProfile: async (displayName, photoURL) => {
+        if (!auth.currentUser) return;
+        await updateProfile(auth.currentUser, { displayName, photoURL });
+        return auth.currentUser;
     }
 };
