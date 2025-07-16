@@ -8,8 +8,22 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = authService.onAuthStateChanged((user) => {
-      setUser(user);
+    const unsubscribe = authService.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+          const res = await fetch(`${API}/api/auth/me?uid=${firebaseUser.uid}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.user && data.user.settings) {
+              firebaseUser.settings = data.user.settings;
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to fetch DB user settings', e);
+        }
+      }
+      setUser(firebaseUser);
       setLoading(false);
     });
     return unsubscribe;
@@ -31,12 +45,23 @@ export function AuthProvider({ children }) {
     await authService.logout();
   };
 
+  const updateProfile = async (displayName, photoURL) => {
+    const updatedUser = await authService.updateProfile(displayName, photoURL);
+    if (updatedUser) setUser({ ...user, ...updatedUser }); // Trigger state update
+  };
+
+  const updateUserSettings = (newSettings) => {
+    setUser(prev => ({ ...prev, settings: { ...prev.settings, ...newSettings } }));
+  };
+
   const value = {
     user,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
-    logout
+    logout,
+    updateProfile,
+    updateUserSettings
   };
 
   return (
