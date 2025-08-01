@@ -95,7 +95,7 @@ function Navbar() {
       {showSignIn ? <SignIn onToggle={toggleAuth} /> : <SignUp onToggle={toggleAuth} />}
       <button
         onClick={toggleAuth}
-        className="w-full mt-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-sofia-light"
+        className="w-full mt-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-karla-light"
       >
         {showSignIn
           ? "Don't have an account? Sign Up"
@@ -113,7 +113,7 @@ function Navbar() {
         : 'bg-transparent py-5'
         }`}
     >
-      <div className="relative px-4 py-4 lg:py-2 sm:px-6 md:px-8 lg:px-20 flex justify-between items-center font-sofia">
+      <div className="relative px-4 py-4 lg:py-2 sm:px-6 md:px-8 lg:px-20 flex justify-between items-center font-karla">
         {/* Logo */}
         <div className="flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200 transform-gpu">
           <img src={websiteLogo} alt="" className="h-8 sm:h-10 reveal-text" loading="eager" />
@@ -122,13 +122,13 @@ function Navbar() {
 
         <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 gap-8">
           <HashLink smooth to="/#solutions" scroll={scrollWithOffset} className="cursor-pointer">
-            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-sofia-medium">Solutions</button>
+            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-karla-medium">Solutions</button>
           </HashLink>
           <HashLink smooth to="/#pricing" scroll={scrollWithOffset} className="cursor-pointer">
-            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-sofia-medium">Plan & Pricing</button>
+            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-karla-medium">Plan & Pricing</button>
           </HashLink>
           <HashLink smooth to="/#contact_us" scroll={scrollWithOffset} className="cursor-pointer">
-            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-sofia-medium">Contact Us</button>
+            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-karla-medium">Contact Us</button>
           </HashLink>
         </div>
 
@@ -136,12 +136,12 @@ function Navbar() {
         <div className="hidden lg:flex items-center gap-4">
           {user ? (
             <>
-              <span className="dark:text-white font-sofia-light">
+              <span className="dark:text-white font-karla-light">
                 Welcome, {user.displayName ? user.displayName.split(' ')[0] : 'User'}
               </span>
               <button
                 onClick={handleLogout}
-                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white font-sofia-medium"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white font-karla-medium"
               >
                 Logout
               </button>
@@ -149,7 +149,7 @@ function Navbar() {
           ) : (
             <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
-                <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text font-sofia-medium">
+                <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text font-karla-medium">
                   <span className="text-sm sm:text-base">Login</span>
                 </button>
               </DialogTrigger>
@@ -188,19 +188,19 @@ function Navbar() {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white dark:bg-[#1e1e1e] mx-4 mt-4 rounded-lg shadow-md py-4 px-4 sm:px-6 md:px-8">
           <HashLink smooth to="/#solutions" scroll={scrollWithOffset} className="block py-2">
-            <button className="reveal-text dark:text-white font-sofia-medium">Solutions</button>
+            <button className="reveal-text dark:text-white font-karla-medium">Solutions</button>
           </HashLink>
           <HashLink smooth to="/#pricing" scroll={scrollWithOffset} className="block py-2">
-            <button className="reveal-text dark:text-white font-sofia-medium">Plan & Pricing</button>
+            <button className="reveal-text dark:text-white font-karla-medium">Plan & Pricing</button>
           </HashLink>
           <HashLink smooth to="/#contact_us" scroll={scrollWithOffset} className="block py-2">
-            <button className="reveal-text dark:text-white font-sofia-medium">Contact Us</button>
+            <button className="reveal-text dark:text-white font-karla-medium">Contact Us</button>
           </HashLink>
           <div className="flex items-center justify-between mt-4">
           {!user && (
             <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
-                  <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text font-sofia-medium">
+                  <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text font-karla-medium">
                     <span className="text-sm sm:text-base">Login</span>
                 </button>
               </DialogTrigger>
