@@ -9,7 +9,7 @@ import { CheckIcon } from '@heroicons/react/24/outline';
 const FeatureComponent = ({ heading, description, features }) => {
   return (
     <div>
-      <h2 className="text-3xl sm:text-4xl font-sofia-medium text-gray-900 dark:text-gray-100">
+      <h2 className="text-3xl sm:text-4xl font-karla-medium text-gray-900 dark:text-gray-100">
         {heading}
       </h2>
       <p className="mt-3 text-gray-600 dark:text-gray-400">
@@ -97,7 +97,7 @@ function Solutions() {
 const FeatureItem = ({ icon: Icon, text }) => (
   <div className='w-64 h-20 flex gap-4 items-center rounded-md shadow-lg px-4 bg-white dark:bg-[#121212] dark:shadow-[rgba(255,255,255,0.08)] dark:border dark:border-gray-600'>
     <Icon />
-    <span className='text-lg font-sofia-semibold text-gray-900 dark:text-gray-100'>{text}</span>
+    <span className='text-lg font-karla-semibold text-gray-900 dark:text-gray-100'>{text}</span>
   </div>
 );
 
