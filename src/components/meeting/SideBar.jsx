@@ -67,7 +67,7 @@ const Sidebar = () => {
                   <img src={websiteLogo} alt="Logo" className="h-5 w-5 object-contain" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[15px] font-sofia-medium dark:text-white text-gray-900">
+                  <span className="text-[15px] font-karla-medium dark:text-white text-gray-900">
                     Wavemeet
                   </span>
                   <span className="text-xs text-gray-400">
@@ -93,7 +93,7 @@ const Sidebar = () => {
           {/* Platform Label */}
           {isExpanded && (
             <div className="px-3 pt-6 pb-2">
-              <span className="text-xs font-sofia-medium text-gray-400">
+              <span className="text-xs font-karla-medium text-gray-400">
                 Platform
               </span>
             </div>
@@ -120,7 +120,7 @@ const Sidebar = () => {
                     >
                       <Icon className="h-4 w-4 min-w-[16px]" />
                       {isExpanded && (
-                        <span className="ml-3 text-[14px] font-sofia-medium">
+                        <span className="ml-3 text-[14px] font-karla-medium">
                           {item.label}
                         </span>
                       )}
@@ -156,7 +156,7 @@ const Sidebar = () => {
                 </div>
                 {isExpanded && (
                   <div className="flex flex-col">
-                    <span className="text-sm font-sofia-medium dark:text-white text-gray-900">
+                    <span className="text-sm font-karla-medium dark:text-white text-gray-900">
                       John Doe
                     </span>
                   </div>
