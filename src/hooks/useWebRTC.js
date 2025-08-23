@@ -1,396 +1,317 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useSocket } from '@/context/SocketContext';
 import { useMeeting } from '@/context/MeetingContext';
 import { useAuth } from '@/context/AuthContext';
+const entrySound = new Audio('/sounds/entry.mp3');
+const exitSound = new Audio('/sounds/exit.mp3');
+entrySound.volume = 0.5;
+exitSound.volume = 0.5;
 
-/**
- * useWebRTC — handles all WebRTC peer connections and Socket.IO signaling.
- *
- * Flow:
- *  1. User joins room → socket emits 'join-room'
- *  2. Server replies with 'room-joined' (existing peers + ICE config)
- *  3. For each existing peer, we CREATE an offer and send it
- *  4. When a new user joins later, THEY send us an offer
- *  5. We handle offer → create answer → send answer
- *  6. ICE candidates are exchanged throughout
- */
 export function useWebRTC(roomId) {
   const { socket } = useSocket();
   const { state, dispatch } = useMeeting();
   const { user } = useAuth();
-
-  // Map of socketId → RTCPeerConnection
-  const peerConnections = useRef(new Map());
+  const peerConnections = useRef({});
   const localStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
+  const iceServersRef = useRef([]);
 
-  // ── Get local media ──────────────────────────────────────
-  const getLocalStream = useCallback(async () => {
+  const playAudio = useCallback((type) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-      localStreamRef.current = stream;
-      dispatch({ type: 'SET_LOCAL_STREAM', payload: stream });
-      return stream;
-    } catch (err) {
-      console.error('Failed to get media:', err);
-      // Try audio-only fallback
-      try {
-        const audioStream = await navigator.mediaDevices.getUserMedia({
-          video: false,
-          audio: true,
-        });
-        localStreamRef.current = audioStream;
-        dispatch({ type: 'SET_LOCAL_STREAM', payload: audioStream });
-        return audioStream;
-      } catch (audioErr) {
-        console.error('Failed to get any media:', audioErr);
-        return null;
-      }
-    }
-  }, [dispatch]);
-
-  // ── Create a peer connection for a remote user ───────────
-  const createPeerConnection = useCallback(
-    (remoteSocketId, iceServers) => {
-      // Don't create duplicate connections
-      if (peerConnections.current.has(remoteSocketId)) {
-        return peerConnections.current.get(remoteSocketId);
-      }
-
-      const pc = new RTCPeerConnection({ iceServers });
-
-      // Add local tracks to the connection
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => {
-          pc.addTrack(track, localStreamRef.current);
-        });
-      }
-
-      // When we get ICE candidates, send them to the remote peer
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          socket.emit('ice-candidate', {
-            to: remoteSocketId,
-            candidate: event.candidate,
-          });
-        }
-      };
-
-      // When remote sends us their tracks
-      pc.ontrack = (event) => {
-        const [remoteStream] = event.streams;
-        if (remoteStream) {
-          dispatch({
-            type: 'UPDATE_PEER_STREAM',
-            payload: { socketId: remoteSocketId, stream: remoteStream },
-          });
-        }
-      };
-
-      pc.oniceconnectionstatechange = () => {
-        console.log(`ICE state [${remoteSocketId}]:`, pc.iceConnectionState);
-        if (pc.iceConnectionState === 'failed') {
-          pc.restartIce();
-        }
-      };
-
-      peerConnections.current.set(remoteSocketId, pc);
-      return pc;
-    },
-    [socket, dispatch]
-  );
-
-  // ── Send offer to a peer ─────────────────────────────────
-  const sendOffer = useCallback(
-    async (remoteSocketId, iceServers) => {
-      const pc = createPeerConnection(remoteSocketId, iceServers);
-      try {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        socket.emit('offer', { to: remoteSocketId, offer });
-      } catch (err) {
-        console.error('Error creating offer:', err);
-      }
-    },
-    [createPeerConnection, socket]
-  );
-
-  // ── Handle incoming offer ────────────────────────────────
-  const handleOffer = useCallback(
-    async ({ from, offer }) => {
-      const iceServers = state.iceServers;
-      const pc = createPeerConnection(from, iceServers);
-      try {
-        await pc.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        socket.emit('answer', { to: from, answer });
-      } catch (err) {
-        console.error('Error handling offer:', err);
-      }
-    },
-    [createPeerConnection, socket, state.iceServers]
-  );
-
-  // ── Handle incoming answer ───────────────────────────────
-  const handleAnswer = useCallback(async ({ from, answer }) => {
-    const pc = peerConnections.current.get(from);
-    if (pc) {
-      try {
-        await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      } catch (err) {
-        console.error('Error handling answer:', err);
-      }
+      const audio = type === 'entry' ? entrySound : exitSound;
+      audio.currentTime = 0;
+      audio.play().catch(e => console.warn('[AUDIO PLAY ERROR]', e.message));
+    } catch (e) {
+      console.warn('[AUDIO SETUP ERROR]', e.message);
     }
   }, []);
 
-  // ── Handle incoming ICE candidate ────────────────────────
-  const handleIceCandidate = useCallback(async ({ from, candidate }) => {
-    const pc = peerConnections.current.get(from);
-    if (pc && candidate) {
-      try {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (err) {
-        console.error('Error adding ICE candidate:', err);
+  const createPeer = useCallback((targetSocketId, isInitiator) => {
+    const pc = new RTCPeerConnection({ iceServers: iceServersRef.current });
+
+    pc.onicecandidate = (e) => {
+      if (e.candidate && socket) {
+        socket.emit('ice-candidate', { to: targetSocketId, candidate: e.candidate });
       }
-    }
-  }, []);
+    };
 
-  // ── Close a single peer connection ───────────────────────
-  const closePeerConnection = useCallback(
-    (socketId) => {
-      const pc = peerConnections.current.get(socketId);
-      if (pc) {
-        pc.close();
-        peerConnections.current.delete(socketId);
+    pc.ontrack = (e) => {
+      if (e.streams?.[0]) {
+        dispatch({ type: 'UPDATE_PEER_STREAM', payload: { socketId: targetSocketId, stream: e.streams[0] } });
       }
-      dispatch({ type: 'REMOVE_PEER', payload: socketId });
-    },
-    [dispatch]
-  );
+    };
 
-  // ── Join the room ────────────────────────────────────────
-  const joinRoom = useCallback(async () => {
-    const stream = await getLocalStream();
-    if (!stream) {
-      console.warn('Joining without media');
-    }
+    pc.oniceconnectionstatechange = () => {
+      if (pc.iceConnectionState === 'failed') {
+        pc.restartIce();
+      }
+    };
 
-    socket.emit('join-room', {
-      roomId,
-      userId: user?.uid || 'anonymous',
-      userName: user?.displayName || 'Guest',
-    });
-  }, [getLocalStream, socket, roomId, user]);
-
-  // ── Leave the room ───────────────────────────────────────
-  const leaveRoom = useCallback(() => {
-    socket.emit('leave-room', { roomId });
-
-    // Close all peer connections
-    for (const [id] of peerConnections.current) {
-      closePeerConnection(id);
-    }
-
-    // Stop local media
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach((t) => t.stop());
+      localStreamRef.current.getTracks().forEach(track => pc.addTrack(track, localStreamRef.current));
+    }
+
+    peerConnections.current[targetSocketId] = pc;
+    return pc;
+  }, [socket, dispatch]);
+
+  const joinRoom = useCallback(async () => {
+    if (!socket || !roomId) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localStreamRef.current = stream;
+      
+      const isNewRoomSession = state.lastJoinedRoomId !== roomId;
+
+      if (isNewRoomSession) {
+        // Apply default join settings for a NEW join
+        const defaultMute = user?.settings?.defaultMuteOnJoin;
+        const defaultVideoOff = user?.settings?.defaultVideoOffOnJoin;
+
+        if (defaultMute) {
+          stream.getAudioTracks().forEach(t => t.enabled = false);
+          dispatch({ type: 'SET_MUTED', payload: true });
+        } else {
+          dispatch({ type: 'SET_MUTED', payload: false });
+        }
+        
+        if (defaultVideoOff) {
+          stream.getVideoTracks().forEach(t => t.enabled = false);
+          dispatch({ type: 'SET_CAMERA_OFF', payload: true });
+        } else {
+          dispatch({ type: 'SET_CAMERA_OFF', payload: false });
+        }
+
+        dispatch({ type: 'SET_LAST_ROOM', payload: roomId });
+      } else {
+        // Returning to the SAME room session (e.g. from settings)
+        // Respect the manual state already preserved in MeetingContext
+        if (state.isMuted) {
+          stream.getAudioTracks().forEach(t => t.enabled = false);
+        }
+        if (state.isCameraOff) {
+          stream.getVideoTracks().forEach(t => t.enabled = false);
+        }
+      }
+
+      dispatch({ type: 'SET_LOCAL_STREAM', payload: stream });
+      dispatch({ type: 'SET_JOINED' });
+      socket.emit('join-room', { 
+        roomId: roomId.trim().toLowerCase(), 
+        userId: user?.uid || 'anon', 
+        userName: user?.displayName || 'Guest',
+        photoURL: user?.photoURL
+      });
+    } catch (err) {
+      console.error('[MEDIA]', err);
+      dispatch({ type: 'SET_JOINED' });
+      socket.emit('join-room', { 
+        roomId: roomId.trim().toLowerCase(), 
+        userId: user?.uid || 'anon', 
+        userName: user?.displayName || 'Guest',
+        photoURL: user?.photoURL
+      });
+    }
+  }, [socket, roomId, user, dispatch]);
+
+  const leaveRoom = useCallback(() => {
+    if (socket) socket.emit('leave-room', { roomId: roomId?.trim().toLowerCase() });
+    Object.values(peerConnections.current).forEach(pc => pc.close());
+    peerConnections.current = {};
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(t => t.stop());
       localStreamRef.current = null;
     }
     if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach((t) => t.stop());
+      screenStreamRef.current.getTracks().forEach(t => t.stop());
       screenStreamRef.current = null;
     }
-
     dispatch({ type: 'RESET' });
-  }, [socket, roomId, closePeerConnection, dispatch]);
+  }, [socket, roomId, dispatch]);
 
-  // ── Toggle Microphone ────────────────────────────────────
   const toggleMute = useCallback(() => {
-    if (localStreamRef.current) {
-      const audioTrack = localStreamRef.current.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        socket.emit('toggle-media', {
-          roomId,
-          kind: 'audio',
-          enabled: audioTrack.enabled,
-        });
+    const stream = localStreamRef.current;
+    if (stream) {
+      const track = stream.getAudioTracks()[0];
+      if (track) {
+        track.enabled = !track.enabled;
         dispatch({ type: 'TOGGLE_MUTE' });
+        socket?.emit('toggle-audio', { roomId: roomId?.trim().toLowerCase(), enabled: track.enabled });
       }
     }
   }, [socket, roomId, dispatch]);
 
-  // ── Toggle Camera ────────────────────────────────────────
   const toggleCamera = useCallback(() => {
-    if (localStreamRef.current) {
-      const videoTrack = localStreamRef.current.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        socket.emit('toggle-media', {
-          roomId,
-          kind: 'video',
-          enabled: videoTrack.enabled,
-        });
+    const stream = localStreamRef.current;
+    if (stream) {
+      const track = stream.getVideoTracks()[0];
+      if (track) {
+        track.enabled = !track.enabled;
         dispatch({ type: 'TOGGLE_CAMERA' });
+        socket?.emit('toggle-video', { roomId: roomId?.trim().toLowerCase(), enabled: track.enabled });
       }
     }
   }, [socket, roomId, dispatch]);
 
-  // ── Toggle Screen Share ──────────────────────────────────
   const toggleScreenShare = useCallback(async () => {
+    const nRoomId = roomId?.trim().toLowerCase();
     if (state.isScreenSharing) {
-      // Stop screen share
       if (screenStreamRef.current) {
-        screenStreamRef.current.getTracks().forEach((t) => t.stop());
+        screenStreamRef.current.getTracks().forEach(t => t.stop());
         screenStreamRef.current = null;
       }
-
-      // Replace screen track with camera track in all connections
-      const videoTrack = localStreamRef.current?.getVideoTracks()[0];
-      if (videoTrack) {
-        for (const [, pc] of peerConnections.current) {
-          const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-          if (sender) {
-            await sender.replaceTrack(videoTrack);
-          }
-        }
-      }
-
-      socket.emit('screen-share', { roomId, sharing: false });
       dispatch({ type: 'SET_SCREEN_STREAM', payload: null });
-    } else {
-      // Start screen share
-      try {
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: false,
+      const camTrack = localStreamRef.current?.getVideoTracks()[0];
+      if (camTrack) {
+        Object.values(peerConnections.current).forEach(pc => {
+          const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+          if (sender) sender.replaceTrack(camTrack);
         });
-        screenStreamRef.current = screenStream;
-
-        const screenTrack = screenStream.getVideoTracks()[0];
-
-        // Replace camera track with screen track in all connections
-        for (const [, pc] of peerConnections.current) {
-          const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-          if (sender) {
-            await sender.replaceTrack(screenTrack);
-          }
-        }
-
-        // When user stops sharing via browser UI
-        screenTrack.onended = () => {
-          toggleScreenShare();
-        };
-
-        socket.emit('screen-share', { roomId, sharing: true });
-        dispatch({ type: 'SET_SCREEN_STREAM', payload: screenStream });
-      } catch (err) {
-        console.error('Screen share failed:', err);
       }
+      socket?.emit('screen-share-stop', { roomId: nRoomId });
+      return;
     }
-  }, [state.isScreenSharing, socket, roomId, dispatch]);
-
-  // ── Send Chat Message ────────────────────────────────────
-  const sendChatMessage = useCallback(
-    (message) => {
-      if (!message.trim()) return;
-      socket.emit('chat-message', {
-        roomId,
-        userId: user?.uid || 'anonymous',
-        userName: user?.displayName || 'Guest',
-        message: message.trim(),
+    try {
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      screenStreamRef.current = screenStream;
+      const screenTrack = screenStream.getVideoTracks()[0];
+      dispatch({ type: 'SET_SCREEN_STREAM', payload: screenStream });
+      Object.values(peerConnections.current).forEach(pc => {
+        const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+        if (sender) sender.replaceTrack(screenTrack);
       });
-    },
-    [socket, roomId, user]
-  );
+      screenTrack.onended = () => {
+        screenStreamRef.current = null;
+        dispatch({ type: 'SET_SCREEN_STREAM', payload: null });
+        const camTrack = localStreamRef.current?.getVideoTracks()[0];
+        if (camTrack) {
+          Object.values(peerConnections.current).forEach(pc => {
+            const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+            if (sender) sender.replaceTrack(camTrack);
+          });
+        }
+        socket?.emit('screen-share-stop', { roomId: nRoomId });
+      };
+      socket?.emit('screen-share-start', { roomId: nRoomId });
+    } catch (err) { console.error('[SCREEN]', err); }
+  }, [socket, roomId, state.isScreenSharing, dispatch]);
 
-  // ── Socket Event Listeners ───────────────────────────────
+  const sendChatMessage = useCallback((message) => {
+    if (!socket || !message.trim()) return;
+    socket.emit('chat-message', { roomId: roomId?.trim().toLowerCase(), message, senderId: user?.uid || 'anon', senderName: user?.displayName || 'Guest' });
+  }, [socket, roomId, user]);
+
+  // Socket event listeners
   useEffect(() => {
     if (!socket) return;
 
-    // When we successfully join and get room info
-    const onRoomJoined = async ({ roomId: rId, iceServers, peers }) => {
-      dispatch({
-        type: 'SET_ROOM',
-        payload: { roomId: rId, iceServers },
-      });
-
-      // Add all existing peers and send them offers
-      for (const peer of peers) {
-        dispatch({
-          type: 'ADD_PEER',
-          payload: {
-            socketId: peer.socketId,
-            userId: peer.userId,
-            userName: peer.userName,
-            stream: null,
-          },
-        });
-        await sendOffer(peer.socketId, iceServers);
+    const onRoomUsers = async ({ users, iceServers }) => {
+      iceServersRef.current = iceServers || [];
+      for (const u of users) {
+        dispatch({ type: 'ADD_PEER', payload: { socketId: u.socketId, odId: u.odId, userName: u.userName, photoURL: u.photoURL, stream: null, audioEnabled: u.audioEnabled ?? true, videoEnabled: u.videoEnabled ?? true } });
+        const pc = createPeer(u.socketId, true);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit('offer', { to: u.socketId, offer });
       }
     };
 
-    // When a new user joins after us
-    const onUserJoined = ({ socketId, userId, userName }) => {
-      dispatch({
-        type: 'ADD_PEER',
-        payload: { socketId, userId, userName, stream: null },
-      });
-      // Don't send offer — the new user will send us one via onRoomJoined
+    const onUserJoined = ({ socketId, odId, userName, photoURL }) => {
+      dispatch({ type: 'ADD_PEER', payload: { socketId, odId, userName, photoURL, stream: null, audioEnabled: true, videoEnabled: true } });
+      playAudio('entry');
     };
 
-    // When a user leaves
+    const onOffer = async ({ from, offer }) => {
+      const pc = createPeer(from, false);
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit('answer', { to: from, answer });
+    };
+
+    const onAnswer = async ({ from, answer }) => {
+      const pc = peerConnections.current[from];
+      if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
+    };
+
+    const onIceCandidate = async ({ from, candidate }) => {
+      const pc = peerConnections.current[from];
+      if (pc && candidate) {
+        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { /* ignore */ }
+      }
+    };
+
     const onUserLeft = ({ socketId }) => {
-      closePeerConnection(socketId);
+      peerConnections.current[socketId]?.close();
+      delete peerConnections.current[socketId];
+      dispatch({ type: 'REMOVE_PEER', payload: socketId });
+      if (socketId !== socket.id) playAudio('exit');
     };
 
-    // Chat message received
-    const onChatMessage = ({ senderId, senderName, message, timestamp }) => {
-      dispatch({
-        type: 'ADD_CHAT_MESSAGE',
-        payload: { senderId, senderName, message, timestamp },
-      });
+    const onMediaToggle = ({ socketId, audioEnabled, videoEnabled }) => {
+      dispatch({ type: 'UPDATE_PEER_MEDIA', payload: { socketId, audioEnabled, videoEnabled } });
     };
 
-    // Peer toggled their media
-    const onPeerMediaToggle = ({ socketId, kind, enabled }) => {
-      dispatch({
-        type: 'TOGGLE_PEER_MEDIA',
-        payload: { socketId, kind, enabled },
-      });
+    const onNewMessage = (msg) => { dispatch({ type: 'ADD_MESSAGE', payload: msg }); };
+    const onChatHistory = (msgs) => { dispatch({ type: 'SET_CHAT_HISTORY', payload: msgs }); };
+
+    const onUserTyping = ({ userName }) => {
+      dispatch({ type: 'SET_TYPING', payload: userName });
+      setTimeout(() => dispatch({ type: 'CLEAR_TYPING', payload: userName }), 3000);
     };
 
-    socket.on('room-joined', onRoomJoined);
+    const onTasksUpdated = (tasks) => { dispatch({ type: 'SET_TASKS', payload: tasks }); };
+
+    const onReaction = ({ socketId, emoji }) => {
+      dispatch({ type: 'SET_REACTION', payload: { socketId, emoji } });
+      setTimeout(() => dispatch({ type: 'CLEAR_REACTION', payload: socketId }), 3000);
+    };
+
+    const onJoinRequest = ({ odId, displayName, socketId: reqSocketId }) => {
+      dispatch({ type: 'ADD_JOIN_REQUEST', payload: { odId, displayName, socketId: reqSocketId } });
+    };
+
+    const onForceMuted = () => {
+      const track = localStreamRef.current?.getAudioTracks()[0];
+      if (track) { track.enabled = false; dispatch({ type: 'SET_MUTED', payload: true }); }
+    };
+
+    const onRemoved = () => { leaveRoom(); };
+
+    socket.on('room-users', onRoomUsers);
     socket.on('user-joined', onUserJoined);
+    socket.on('offer', onOffer);
+    socket.on('answer', onAnswer);
+    socket.on('ice-candidate', onIceCandidate);
     socket.on('user-left', onUserLeft);
-    socket.on('offer', handleOffer);
-    socket.on('answer', handleAnswer);
-    socket.on('ice-candidate', handleIceCandidate);
-    socket.on('chat-message', onChatMessage);
-    socket.on('peer-media-toggle', onPeerMediaToggle);
+    socket.on('user-media-toggle', onMediaToggle);
+    socket.on('new-message', onNewMessage);
+    socket.on('chat-history', onChatHistory);
+    socket.on('user-typing', onUserTyping);
+    socket.on('tasks-updated', onTasksUpdated);
+    socket.on('user-reaction', onReaction);
+    socket.on('join-request-received', onJoinRequest);
+    socket.on('force-muted', onForceMuted);
+    socket.on('removed-from-meeting', onRemoved);
 
     return () => {
-      socket.off('room-joined', onRoomJoined);
+      socket.off('room-users', onRoomUsers);
       socket.off('user-joined', onUserJoined);
+      socket.off('offer', onOffer);
+      socket.off('answer', onAnswer);
+      socket.off('ice-candidate', onIceCandidate);
       socket.off('user-left', onUserLeft);
-      socket.off('offer', handleOffer);
-      socket.off('answer', handleAnswer);
-      socket.off('ice-candidate', handleIceCandidate);
-      socket.off('chat-message', onChatMessage);
-      socket.off('peer-media-toggle', onPeerMediaToggle);
+      socket.off('user-media-toggle', onMediaToggle);
+      socket.off('new-message', onNewMessage);
+      socket.off('chat-history', onChatHistory);
+      socket.off('user-typing', onUserTyping);
+      socket.off('tasks-updated', onTasksUpdated);
+      socket.off('user-reaction', onReaction);
+      socket.off('join-request-received', onJoinRequest);
+      socket.off('force-muted', onForceMuted);
+      socket.off('removed-from-meeting', onRemoved);
     };
-  }, [socket, dispatch, sendOffer, handleOffer, handleAnswer, handleIceCandidate, closePeerConnection]);
+  }, [socket, createPeer, dispatch, leaveRoom]);
 
-  return {
-    joinRoom,
-    leaveRoom,
-    toggleMute,
-    toggleCamera,
-    toggleScreenShare,
-    sendChatMessage,
-  };
+  return { joinRoom, leaveRoom, toggleMute, toggleCamera, toggleScreenShare, sendChatMessage };
 }
