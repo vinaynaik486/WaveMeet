@@ -1,8 +1,9 @@
-import React, { useRef, useEffect } from 'react';
-import { MdMicOff, MdPerson } from 'react-icons/md';
+import React, { useRef, useEffect, useState } from 'react';
+import { MdMicOff, MdPerson, MdPushPin } from 'react-icons/md';
 
-export default function VideoTile({ stream, userName, isMuted, isCameraOff, isLocal, isFeatured }) {
+export default function VideoTile({ stream, userName, photoURL, isMuted, isCameraOff, isLocal, isFeatured, onPin, isPinned }) {
   const videoRef = useRef(null);
+  const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -12,83 +13,77 @@ export default function VideoTile({ stream, userName, isMuted, isCameraOff, isLo
 
   const showVideo = stream && !isCameraOff;
 
-  if (isFeatured) {
-    // ── Featured / Main Speaker Tile ───────────────────────
-    return (
-      <div className="relative w-full h-full bg-gray-900 rounded-2xl overflow-hidden shadow-lg">
-        {showVideo ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted={isLocal}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-            <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center">
-              <MdPerson className="text-white/40" size={48} />
-            </div>
-          </div>
-        )}
+  const handlePin = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (onPin) onPin();
+  };
 
-        {/* Name badge — top left */}
-        <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center flex-shrink-0">
-            <span className="text-[10px] font-bold text-white">
-              {(userName || 'U')[0].toUpperCase()}
-            </span>
-          </div>
-          <span className="text-white text-sm font-medium font-sofia-medium">
-            {userName}
-          </span>
-          {isMuted && (
-            <div className="w-5 h-5 rounded-full bg-red-500/80 flex items-center justify-center">
-              <MdMicOff className="text-white" size={12} />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ── Small Participant Tile (strip) ─────────────────────
   return (
-    <div className="relative bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 h-32 md:h-36">
+    <div
+      className={`relative rounded-[2rem] overflow-hidden shadow-2xl group transition-all duration-500 border border-gray-200 dark:border-white/5 ${isFeatured ? 'w-full h-full bg-[#fafafa] dark:bg-[#0a0a1a]' : 'h-full bg-[#fafafa] dark:bg-white/5 backdrop-blur-sm'}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       {showVideo ? (
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted={isLocal}
-          className="w-full h-full object-cover"
+          className={`w-full h-full transition-transform duration-700 ${isFeatured ? 'object-contain bg-[#050505]' : 'object-cover'}`}
         />
       ) : (
-        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center">
-            <MdPerson className="text-white" size={24} />
+        <div className={`w-full h-full flex items-center justify-center relative overflow-hidden ${isFeatured ? 'bg-[#fafafa] dark:bg-[#0a0a1a]' : 'bg-[#fafafa] dark:bg-gray-900/40'}`}>
+          {photoURL && (
+            <div
+              className="absolute inset-0 opacity-40 blur-3xl scale-125 transition-transform duration-1000 group-hover:scale-150"
+              style={{ backgroundImage: `url(${photoURL})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+            />
+          )}
+          <div className={`${isFeatured ? 'w-28 h-28' : 'w-16 h-16'} relative z-10 rounded-full flex items-center justify-center backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden transition-all duration-500`}>
+            {photoURL ? (
+              <img src={photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                <MdPerson className="text-white/40" size={isFeatured ? 48 : 24} />
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Name + status overlay */}
-      <div className="absolute top-2 left-2 right-2 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 bg-black/30 backdrop-blur-sm rounded-full px-2 py-1">
-          <div className="w-4 h-4 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center flex-shrink-0">
-            <span className="text-[7px] font-bold text-white">
-              {(userName || 'G')[0].toUpperCase()}
-            </span>
-          </div>
-          <span className="text-white text-[11px] font-medium truncate max-w-[80px] font-sofia-medium">
-            {userName}
-          </span>
-        </div>
+      {/* Name Badge */}
+      <div className={`absolute ${isFeatured ? 'top-6 left-6' : 'top-3 left-3'} flex items-center gap-3 bg-black/40 backdrop-blur-[20px] border border-white/10 rounded-full px-4 py-2 shadow-2xl transition-all duration-300 z-10`}>
+        <span className={`text-white font-bold tracking-tight ${isFeatured ? 'text-sm' : 'text-[11px]'}`}>
+          {userName} {isLocal && '(You)'}
+        </span>
         {isMuted && (
-          <div className="w-5 h-5 rounded-full bg-red-500/70 flex items-center justify-center">
+          <div className="w-5 h-5 rounded-full bg-red-500/80 flex items-center justify-center shadow-lg border border-white/20">
             <MdMicOff className="text-white" size={12} />
           </div>
         )}
       </div>
+
+      {/* Pin Button — always shown for non-featured, hover for featured */}
+      <button
+        onClick={handlePin}
+        className={`absolute ${isFeatured ? 'top-6 right-6' : 'bottom-3 right-3'} w-10 h-10 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 z-20 border border-white/10 backdrop-blur-md
+          ${isPinned
+            ? 'bg-gray-900 dark:bg-white/20 text-white opacity-100'
+            : 'bg-white/10 text-white opacity-0 group-hover:opacity-100 hover:bg-white/30'
+          }`}
+      >
+        <MdPushPin
+          size={20}
+          className={`transition-transform duration-300 ${isPinned ? 'rotate-45 scale-110' : 'rotate-[30deg]'}`}
+        />
+      </button>
+
+      {/* Shadow Overlay */}
+      {isFeatured && (
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+      )}
     </div>
   );
 }
