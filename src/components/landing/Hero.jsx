@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { PlusIcon } from '@heroicons/react/24/solid';
-import HeroCover from '/src/assets/landing-page/App_UI.jpg';
+import HeroCover from '/src/assets/landing-page/App_UI.webp';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import SignUp from '../auth/SignUp';
 import { gsap } from 'gsap';
