@@ -7,6 +7,18 @@ const exitSound = new Audio('/sounds/exit.mp3');
 entrySound.volume = 0.5;
 exitSound.volume = 0.5;
 
+/**
+ * Core WebRTC Orchestrator.
+ * 
+ * Manages the full lifecycle of WebRTC peer connections in a mesh topology.
+ * Responsibilities include:
+ * - Local media acquisition (camera, mic, screen share)
+ * - ICE candidate gathering and signaling via Socket.io
+ * - Peer connection lifecycle (offer/answer SDP negotiation)
+ * - Real-time media state synchronization across connected peers
+ * 
+ * @param {string} roomId - The target room identifier
+ */
 export function useWebRTC(roomId) {
   const { socket } = useSocket();
   const { state, dispatch } = useMeeting();
@@ -16,6 +28,14 @@ export function useWebRTC(roomId) {
   const screenStreamRef = useRef(null);
   const iceServersRef = useRef([]);
 
+  // ---------------------------------------------------------------------------
+  // Media & Hardware Orchestration
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Safe audio playback utility. Prevents DOM exceptions when browser
+   * autoplay policies block un-interacted audio playback.
+   */
   const playAudio = useCallback((type) => {
     try {
       const audio = type === 'entry' ? entrySound : exitSound;
@@ -26,6 +46,17 @@ export function useWebRTC(roomId) {
     }
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // WebRTC Peer Management
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Initializes a new RTCPeerConnection for a remote peer.
+   * Attaches ICE and track listeners, and binds local media tracks for outbound streaming.
+   * 
+   * @param {string} targetSocketId - The Socket.io ID of the remote peer
+   * @param {boolean} isInitiator - Whether this client is creating the initial SDP offer
+   */
   const createPeer = useCallback((targetSocketId, isInitiator) => {
     const pc = new RTCPeerConnection({ iceServers: iceServersRef.current });
 
@@ -55,6 +86,15 @@ export function useWebRTC(roomId) {
     return pc;
   }, [socket, dispatch]);
 
+  // ---------------------------------------------------------------------------
+  // Room Lifecycle (Join / Leave)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Acquires local media hardware and initiates the room join protocol.
+   * Resolves user preferences (default mute/video off) on initial join,
+   * but respects existing context state when reconnecting to an active session.
+   */
   const joinRoom = useCallback(async () => {
     if (!socket || !roomId) return;
     try {
@@ -114,6 +154,10 @@ export function useWebRTC(roomId) {
     }
   }, [socket, roomId, user, dispatch]);
 
+  /**
+   * Completely tears down the WebRTC session.
+   * Closes all peer connections, stops all hardware tracks, and clears context state.
+   */
   const leaveRoom = useCallback(() => {
     if (socket) socket.emit('leave-room', { roomId: roomId?.trim().toLowerCase() });
     Object.values(peerConnections.current).forEach(pc => pc.close());
@@ -129,6 +173,14 @@ export function useWebRTC(roomId) {
     dispatch({ type: 'RESET' });
   }, [socket, roomId, dispatch]);
 
+  // ---------------------------------------------------------------------------
+  // Media Controls (Mic, Cam, Screen)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Toggles the local microphone track state.
+   * Emits the state change to peers to update UI indicators (e.g., mute icon).
+   */
   const toggleMute = useCallback(() => {
     const stream = localStreamRef.current;
     if (stream) {
@@ -141,6 +193,10 @@ export function useWebRTC(roomId) {
     }
   }, [socket, roomId, dispatch]);
 
+  /**
+   * Toggles the local camera track state.
+   * Emits the state change to peers so they can render avatars instead of frozen video.
+   */
   const toggleCamera = useCallback(() => {
     const stream = localStreamRef.current;
     if (stream) {
@@ -153,6 +209,11 @@ export function useWebRTC(roomId) {
     }
   }, [socket, roomId, dispatch]);
 
+  /**
+   * Orchestrates screen sharing.
+   * Dynamically replaces the outbound video track on all active peer connections
+   * with the screen stream. Reverts back to the camera track when sharing stops.
+   */
   const toggleScreenShare = useCallback(async () => {
     const nRoomId = roomId?.trim().toLowerCase();
     if (state.isScreenSharing) {
@@ -201,7 +262,9 @@ export function useWebRTC(roomId) {
     socket.emit('chat-message', { roomId: roomId?.trim().toLowerCase(), message, senderId: user?.uid || 'anon', senderName: user?.displayName || 'Guest' });
   }, [socket, roomId, user]);
 
-  // Socket event listeners
+  // ---------------------------------------------------------------------------
+  // Socket Event Listeners (Signaling & Sync)
+  // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!socket) return;
 

@@ -1,31 +1,46 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { generateRoomId } from '@/lib/utils';
 
+/**
+ * Orchestrates the meeting entry lifecycle (creation and joining).
+ * 
+ * Acts as a facade over the routing and auth layers, caching intended destinations
+ * in `localStorage` to preserve user intent when authentication interrupts the flow.
+ */
 export function useMeetingManager() {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    // UI State
+    // Modal and form view states
     const [dialogOpen, setDialogOpen] = useState(false);
     const [isJoinMeeting, setIsJoinMeeting] = useState(false);
     const [showSignIn, setShowSignIn] = useState(false);
-    const [meetingCode, setMeetingCode] = useState('');
-    const [error, setError] = useState('');
     const [showJoinDialog, setShowJoinDialog] = useState(false);
 
-    const startNewMeeting = () => {
+    // Controlled inputs
+    const [meetingCode, setMeetingCode] = useState('');
+    const [error, setError] = useState('');
+
+    /**
+     * Optimistically provisions a new room. If unauthenticated, defers creation
+     * by surfacing the auth modal. `handleAuthSuccess` will complete the flow.
+     */
+    const startNewMeeting = useCallback(() => {
         if (user) {
-            const newRoomId = generateRoomId();
-            navigate(`/meeting/${newRoomId}`);
+            navigate(`/meeting/${generateRoomId()}`);
         } else {
             setShowSignIn(true);
             setDialogOpen(true);
         }
-    };
+    }, [user, navigate]);
 
-    const joinMeeting = (e) => {
+    /**
+     * Validates and processes meeting joins originating from the primary hero form.
+     * Prevents unauthenticated joins directly at the form level.
+     */
+    const joinMeeting = useCallback((e) => {
         if (e) e.preventDefault();
 
         if (!user) {
@@ -33,45 +48,56 @@ export function useMeetingManager() {
             return;
         }
 
-        if (!meetingCode.trim()) {
-            setError('Please enter a meeting code');
+        const cleanCode = meetingCode.trim();
+        if (!cleanCode) {
+            setError('Please enter a valid meeting code');
             return;
         }
 
-        navigate(`/meeting/${meetingCode.trim()}`);
-    };
+        navigate(`/meeting/${cleanCode}`);
+    }, [user, meetingCode, navigate]);
 
-    const handleManualJoin = () => {
-        if (meetingCode.trim()) {
-            if (user) {
-                navigate(`/meeting/${meetingCode.trim()}`);
-            } else {
-                setShowSignIn(true);
-                setDialogOpen(true);
-                localStorage.setItem('pendingMeetingCode', meetingCode.trim());
-            }
+    /**
+     * Processes manual join attempts, typically from secondary modals.
+     * Caches the target code in storage to survive the OAuth/Login redirect cycle.
+     */
+    const handleManualJoin = useCallback(() => {
+        const cleanCode = meetingCode.trim();
+        if (!cleanCode) return;
+
+        if (user) {
+            navigate(`/meeting/${cleanCode}`);
+        } else {
+            localStorage.setItem('pendingMeetingCode', cleanCode);
+            setShowSignIn(true);
+            setDialogOpen(true);
         }
-    }
+    }, [user, meetingCode, navigate]);
 
-    const handleAuthSuccess = () => {
+    /**
+     * Recovery handler executed post-authentication.
+     * Resolves any cached state (pending joins or creations) mapped prior to login.
+     */
+    const handleAuthSuccess = useCallback(() => {
         setDialogOpen(false);
         setShowSignIn(false);
 
         if (isJoinMeeting) {
-            const code = localStorage.getItem('pendingMeetingCode');
+            const pendingCode = localStorage.getItem('pendingMeetingCode');
             localStorage.removeItem('pendingMeetingCode');
-            if (code) {
-                navigate(`/meeting/${code}`);
+            
+            if (pendingCode) {
+                navigate(`/meeting/${pendingCode}`);
             }
         } else {
+            // Recover a specific room or generate a fresh one if the user just clicked "New Meeting"
             const roomId = localStorage.getItem('pendingRoomId') || generateRoomId();
             localStorage.removeItem('pendingRoomId');
             navigate(`/meeting/${roomId}`);
         }
-    };
+    }, [isJoinMeeting, navigate]);
 
     return {
-        // State
         dialogOpen,
         setDialogOpen,
         isJoinMeeting,
@@ -86,10 +112,10 @@ export function useMeetingManager() {
         setShowJoinDialog,
         user,
 
-        // Actions
         startNewMeeting,
         joinMeeting,
         handleManualJoin,
         handleAuthSuccess
     };
 }
+
