@@ -109,7 +109,7 @@ export default function Dashboard() {
     : `join "${showWarning.data}"`;
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#0a0a1a] font-karla transition-colors duration-500">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a1a] font-karla transition-colors duration-500">
       <div className="max-w-5xl mx-auto px-6 py-12">
 
         {/* Header */}

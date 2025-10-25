@@ -4,11 +4,6 @@
 
 /* Utility classes mapped to Karla */
 .font-karla { font-family: "Karla", system-ui, sans-serif; }
-.font-sofia { font-family: "Karla", system-ui, sans-serif; }
-.font-sofia-light { font-family: "Karla", sans-serif; font-weight: 300; }
-.font-sofia-medium { font-family: "Karla", sans-serif; font-weight: 500; }
-.font-sofia-semibold { font-family: "Karla", sans-serif; font-weight: 600; }
-.font-sofia-bold { font-family: "Karla", sans-serif; font-weight: 700; }
 
 @layer base {
   :root {

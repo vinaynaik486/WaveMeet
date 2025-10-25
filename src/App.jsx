@@ -3,9 +3,11 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider, useSocket } from './context/SocketContext';
 import { ThemeProvider } from 'next-themes';
-import PrivateRoutes from './routes/PrivateRoutes';
-import LandingPage from './pages/LandingPage';
 import ToastAlert from './components/notifications/ToastAlert';
+import ClassicLoader from './components/ui/loader';
+import LandingPage from './pages/LandingPage';
+
+const PrivateRoutes = React.lazy(() => import('./routes/PrivateRoutes'));
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -56,20 +58,26 @@ const App = () => {
             <AuthSync />
             <NotificationToasts />
             <div className="scroll-smooth">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<LandingPage />} />
+              <React.Suspense fallback={
+                <div className="h-screen w-full flex items-center justify-center bg-[#fafafa] dark:bg-[#121212]">
+                  <ClassicLoader />
+                </div>
+              }>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<LandingPage />} />
 
-                {/* Private Routes (Protected) */}
-                <Route path="/*" element={<PrivateRoutes />} />
+                  {/* Private Routes (Protected) */}
+                  <Route path="/*" element={<PrivateRoutes />} />
 
-                {/* 404 Page */}
-                <Route path="*" element={
-                  <div className="min-h-screen flex items-center justify-center">
-                    Page Not Found
-                  </div>
-                } />
-              </Routes>
+                  {/* 404 Page */}
+                  <Route path="*" element={
+                    <div className="min-h-screen flex items-center justify-center">
+                      Page Not Found
+                    </div>
+                  } />
+                </Routes>
+              </React.Suspense>
             </div>
           </SocketProvider>
         </AuthProvider>

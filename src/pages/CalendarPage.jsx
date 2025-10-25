@@ -93,7 +93,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#0a0a1a] font-karla transition-colors duration-500">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a1a] font-karla transition-colors duration-500">
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
@@ -104,8 +104,8 @@ export default function CalendarPage() {
               <MdArrowBack size={22} className="text-gray-600 dark:text-gray-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-black text-gray-900 dark:text-white font-karla-bold tracking-tight">Calendar</h1>
-              <p className="text-sm text-gray-400 font-karla-medium mt-0.5">Manage your scheduled meetings</p>
+              <h1 className="text-2xl font-black text-gray-900 dark:text-white font-bold tracking-tight">Calendar</h1>
+              <p className="text-sm text-gray-400 font-medium mt-0.5">Manage your scheduled meetings</p>
             </div>
           </div>
           <button 
@@ -113,7 +113,7 @@ export default function CalendarPage() {
               setForm({ ...form, date: getTodayISO() });
               setShowModal(true);
             }} 
-            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gray-900 dark:bg-white/10 hover:bg-black dark:hover:bg-white/20 text-white text-sm font-karla-bold shadow-xl shadow-black/10 transition-all active:scale-95 border border-white/5"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gray-900 dark:bg-white/10 hover:bg-black dark:hover:bg-white/20 text-white text-sm font-bold shadow-xl shadow-black/10 transition-all active:scale-95 border border-white/5"
           >
             <MdAdd size={20}/>
             <span>Schedule Meeting</span>
@@ -124,7 +124,7 @@ export default function CalendarPage() {
           {/* Calendar Grid */}
           <div className="lg:col-span-2 bg-white dark:bg-[#121222] rounded-[2rem] p-8 shadow-2xl shadow-black/5 border border-gray-100 dark:border-white/5 transition-all duration-500">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-black text-gray-900 dark:text-white font-karla-bold">{MO[mo]} {yr}</h2>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white font-bold">{MO[mo]} {yr}</h2>
               <div className="flex gap-2">
                 <button onClick={() => setDate(new Date(yr, mo - 1, 1))} className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 transition-all"><MdChevronLeft size={24}/></button>
                 <button onClick={() => setDate(new Date(yr, mo + 1, 1))} className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 transition-all"><MdChevronRight size={24}/></button>
@@ -132,7 +132,7 @@ export default function CalendarPage() {
             </div>
             
             <div className="grid grid-cols-7 gap-2 mb-4">
-              {DAYS.map(d => <div key={d} className="text-center text-[11px] text-gray-400 font-karla-bold uppercase tracking-widest py-2">{d}</div>)}
+              {DAYS.map(d => <div key={d} className="text-center text-[11px] text-gray-400 font-bold uppercase tracking-widest py-2">{d}</div>)}
             </div>
             
             <div className="grid grid-cols-7 gap-3">
@@ -167,7 +167,7 @@ export default function CalendarPage() {
 
           {/* Agenda Side Panel */}
           <div className="bg-white dark:bg-[#121222] rounded-[2rem] p-8 shadow-2xl shadow-black/5 border border-gray-100 dark:border-white/5 transition-all duration-500 overflow-y-auto max-h-[600px] custom-scrollbar">
-            <h3 className="text-lg font-black text-gray-900 dark:text-white font-karla-bold mb-6">
+            <h3 className="text-lg font-black text-gray-900 dark:text-white font-bold mb-6">
               {selDay ? `${MO[mo]} ${selDay}` : 'Upcoming Meetings'}
             </h3>
             <div className="space-y-6">
@@ -176,7 +176,7 @@ export default function CalendarPage() {
                   <div className="w-16 h-16 bg-white dark:bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-4 text-gray-300 shadow-sm">
                     <MdVideocam size={32} />
                   </div>
-                  <p className="text-gray-400 text-sm font-karla-medium">No meetings scheduled</p>
+                  <p className="text-gray-400 text-sm font-medium">No meetings scheduled</p>
                 </div>
               ) : (
                 dayMtgs(selDay || today.getDate()).map(m => (

@@ -1,16 +1,17 @@
+import React, { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { MeetingProvider } from '@/context/MeetingContext';
 import { WebRTCProvider } from '@/context/WebRTCContext';
 import MeetingSidebar from '../components/meeting/MeetingSidebar';
-
-import Dashboard from '../pages/Dashboard';
-import CalendarPage from '../pages/CalendarPage';
-import SettingsPage from '../pages/SettingsPage';
-import MeetingRoom from '../pages/MeetingRoom';
-import MeetingEndPage from '../pages/MeetingEndPage';
-
 import { TooltipProvider } from "@/components/ui/tooltip";
+import ClassicLoader from '@/components/ui/loader';
+
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const CalendarPage = lazy(() => import('../pages/CalendarPage'));
+const SettingsPage = lazy(() => import('../pages/SettingsPage'));
+const MeetingRoom = lazy(() => import('../pages/MeetingRoom'));
+const MeetingEndPage = lazy(() => import('../pages/MeetingEndPage'));
 
 function MeetingLayout({ children }) {
   return (
@@ -29,29 +30,33 @@ function PrivateRoutes() {
 
   if (!user) return <Navigate to="/" />;
 
-  // Some pages might want to hide the sidebar (like landing or special auth pages), 
-  // but for private routes we generally want it.
   const isMeetingEnd = location.pathname === '/meeting-end';
 
   return (
     <TooltipProvider>
       <MeetingProvider>
         <WebRTCProvider>
-          {isMeetingEnd ? (
-            <Routes>
-              <Route path="/meeting-end" element={<MeetingEndPage />} />
-            </Routes>
-          ) : (
-            <MeetingLayout>
+          <Suspense fallback={
+            <div className="h-screen w-full flex items-center justify-center bg-[#fafafa] dark:bg-[#0a0a1a]">
+              <ClassicLoader />
+            </div>
+          }>
+            {isMeetingEnd ? (
               <Routes>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/meeting/:roomId" element={<MeetingRoom />} />
-                <Route path="*" element={<Navigate to="/dashboard" />} />
+                <Route path="/meeting-end" element={<MeetingEndPage />} />
               </Routes>
-            </MeetingLayout>
-          )}
+            ) : (
+              <MeetingLayout>
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/calendar" element={<CalendarPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/meeting/:roomId" element={<MeetingRoom />} />
+                  <Route path="*" element={<Navigate to="/dashboard" />} />
+                </Routes>
+              </MeetingLayout>
+            )}
+          </Suspense>
         </WebRTCProvider>
       </MeetingProvider>
     </TooltipProvider>

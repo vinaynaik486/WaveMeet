@@ -17,7 +17,7 @@ const TABS = [
 function Toggle({ label, checked, onChange }) {
   return (
     <label className="flex items-center justify-between py-4 cursor-pointer group">
-      <span className="text-sm text-gray-700 dark:text-gray-300 font-karla-medium group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{label}</span>
+      <span className="text-sm text-gray-700 dark:text-gray-300 font-medium group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{label}</span>
       <div className={`w-11 h-6 rounded-full transition-all duration-300 ${checked ? 'bg-gray-900 dark:bg-white/20' : 'bg-gray-200 dark:bg-white/10'} relative`} onClick={onChange}>
         <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform duration-300 shadow-sm ${checked ? 'translate-x-6' : 'translate-x-1'}`} />
       </div>
@@ -180,7 +180,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#0a0a1a] font-karla transition-colors duration-500">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a1a] font-karla transition-colors duration-500">
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
