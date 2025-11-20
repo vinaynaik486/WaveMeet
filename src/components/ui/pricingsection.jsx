@@ -5,8 +5,8 @@ const PricingPlan = ({ plan, price, features, isPopular }) => (
   <div
     className={`relative flex flex-col justify-between h-full w-full max-w-sm p-6 mx-auto border border-solid rounded-xl transition-all duration-300 ease-in-out
       ${isPopular
-        ? 'z-20 bg-white dark:bg-[#121212] border border-gray-300 dark:border-[#333] shadow-lg dark:shadow-[rgba(255,255,255,0.08)]'
-        : 'z-10 bg-white dark:bg-[#121212] border border-gray-200 dark:border-[#222] shadow-md dark:shadow-[rgba(255,255,255,0.05)]'}
+        ? 'z-20 bg-[#fafafa] dark:bg-[#0a0a1a] border border-gray-300 dark:border-[#333] shadow-lg dark:shadow-[rgba(255,255,255,0.08)]'
+        : 'z-10 bg-[#fafafa] dark:bg-[#0a0a1a] border border-gray-200 dark:border-[#222] shadow-md dark:shadow-[rgba(255,255,255,0.05)]'}
       hover:shadow-xl dark:hover:shadow-[rgba(255,255,255,0.12)] group`}
   >
     {isPopular && (
@@ -47,7 +47,7 @@ const PricingPlan = ({ plan, price, features, isPopular }) => (
 );
 
 const PricingSection = ({ pricingPlans }) => (
-  <section className="py-12 bg-white dark:bg-[#121212] transition-colors duration-300">
+  <section className="py-12 bg-[#fafafa] dark:bg-[#0a0a1a] transition-colors duration-300">
     <div className="max-w-7xl mx-auto px-6">
       <div id='pricing' className="text-center mb-12">
         <p className="text-4xl font-medium text-gray-900 dark:text-gray-100 sm:text-5xl">

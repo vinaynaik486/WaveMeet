@@ -21,7 +21,7 @@ function Footer() {
   }, []);
 
   return (
-    <footer ref={footerRef} className="w-full bg-white dark:bg-[#121212] p-3 transition-colors duration-300">
+    <footer ref={footerRef} className="w-full bg-[#fafafa] dark:bg-[#0a0a1a] p-3 transition-colors duration-300">
       <hr className="my-4 mx-4 sm:mx-8 md:mx-16 lg:mx-20 border-gray-200 dark:border-gray-700" />
       <div className="flex flex-col lg:flex-row justify-between mx-4 sm:mx-8 md:mx-16 lg:mx-20 items-center space-y-4 lg:space-y-0">
         <div 
@@ -33,7 +33,7 @@ function Footer() {
             WaveMeet
           </span>
         </div>
-        <p className="text-center lg:text-left text-[#222222] dark:text-white font-karla-light reveal-text">
+        <p className="text-center lg:text-left text-[#222222] dark:text-white font-light reveal-text">
           &copy;2025 WaveMeet. All Rights Reserved
         </p>
       </div>

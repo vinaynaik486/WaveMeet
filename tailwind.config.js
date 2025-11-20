@@ -6,22 +6,6 @@ export default {
     extend: {
       fontFamily: {
         karla: ["Karla", "sans-serif"],
-        sofia: ["Karla", "sans-serif"],
-        "sofia-italic": ["Karla", "sans-serif"],
-        "sofia-extralight": ["Karla", "sans-serif"],
-        "sofia-ultralight": ["Karla", "sans-serif"],
-        "sofia-extralight-italic": ["Karla", "sans-serif"],
-        "sofia-ultralight-italic": ["Karla", "sans-serif"],
-        "sofia-light": ["Karla", "sans-serif"],
-        "sofia-light-italic": ["Karla", "sans-serif"],
-        "sofia-medium": ["Karla", "sans-serif"],
-        "sofia-medium-italic": ["Karla", "sans-serif"],
-        "sofia-semibold": ["Karla", "sans-serif"],
-        "sofia-semibold-italic": ["Karla", "sans-serif"],
-        "sofia-bold": ["Karla", "sans-serif"],
-        "sofia-bold-italic": ["Karla", "sans-serif"],
-        "sofia-black": ["Karla", "sans-serif"],
-        "sofia-black-italic": ["Karla", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

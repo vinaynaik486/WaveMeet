@@ -35,7 +35,7 @@ export default function ChatPanel({ onSendMessage, roomId }) {
             <div className="text-gray-900 dark:text-white">
               <MdChatBubbleOutline size={20} />
             </div>
-            <h3 className="text-[13px] font-black text-gray-900 dark:text-white font-karla-bold tracking-tight leading-none">Room Chat</h3>
+            <h3 className="text-[13px] font-black text-gray-900 dark:text-white font-bold tracking-tight leading-none">Room Chat</h3>
           </div>
           <button 
             onClick={() => dispatch({ type: 'TOGGLE_CHAT' })}
@@ -50,7 +50,7 @@ export default function ChatPanel({ onSendMessage, roomId }) {
           {chatMessages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center py-0 opacity-30">
               <MdChatBubbleOutline size={64} className="text-gray-300 dark:text-gray-700 mb-4" />
-              <p className="text-gray-400 text-sm font-karla-medium italic">No messages yet</p>
+              <p className="text-gray-400 text-sm font-medium italic">No messages yet</p>
             </div>
           )}
           {chatMessages.map((msg, i) => {
@@ -90,7 +90,7 @@ export default function ChatPanel({ onSendMessage, roomId }) {
                     </div>
                   )}
                   {/* Message below the name */}
-                  <div className={`text-[13px] font-karla-medium leading-relaxed break-words overflow-hidden ${isMe ? 'text-right' : 'text-left'}`}>
+                  <div className={`text-[13px] font-medium leading-relaxed break-words overflow-hidden ${isMe ? 'text-right' : 'text-left'}`}>
                     {msg.message}
                   </div>
                 </div>
@@ -104,7 +104,7 @@ export default function ChatPanel({ onSendMessage, roomId }) {
             );
           })}
           {typingUsers.length > 0 && (
-            <div className="flex items-center gap-2 text-gray-400 text-[10px] font-karla-bold italic px-1">
+            <div className="flex items-center gap-2 text-gray-400 text-[10px] font-bold italic px-1">
               <span className="w-1 h-1 bg-gray-300 rounded-full animate-bounce" />
               {typingUsers.join(', ')} typing...
             </div>
@@ -121,7 +121,7 @@ export default function ChatPanel({ onSendMessage, roomId }) {
               onChange={(e) => setInput(e.target.value)} 
               onKeyDown={handleTyping} 
               placeholder="Send a message" 
-              className="w-full pl-6 pr-14 py-4 rounded-full bg-[#fafafa] dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-white/30 font-karla-medium focus:border-gray-300 dark:focus:border-white/20 transition-all shadow-inner" 
+              className="w-full pl-6 pr-14 py-4 rounded-full bg-[#fafafa] dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-white/30 font-medium focus:border-gray-300 dark:focus:border-white/20 transition-all shadow-inner" 
             />
             <button 
               type="submit" 

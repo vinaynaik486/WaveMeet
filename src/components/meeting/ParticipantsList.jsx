@@ -29,14 +29,14 @@ export default function ParticipantsList({ roomId }) {
       <div className="flex border-b border-gray-200 dark:border-white/5 flex-shrink-0 bg-[#fafafa] dark:bg-transparent">
         <button 
           onClick={() => setActiveTab('participants')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-[13px] font-bold font-karla-bold transition-all ${activeTab === 'participants' ? 'text-gray-900 border-b-2 border-gray-900 bg-gray-50/30 dark:bg-white/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-[#fafafa] dark:hover:bg-white/5'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-[13px] font-bold font-bold transition-all ${activeTab === 'participants' ? 'text-gray-900 border-b-2 border-gray-900 bg-gray-50/30 dark:bg-white/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-[#fafafa] dark:hover:bg-white/5'}`}
         >
           <MdGroup size={18} />
           <span>People ({peers.length + 1})</span>
         </button>
         <button 
           onClick={() => setActiveTab('requests')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-[13px] font-bold font-karla-bold transition-all relative ${activeTab === 'requests' ? 'text-gray-900 border-b-2 border-gray-900 bg-gray-50/30 dark:bg-white/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'}`}
+          className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-[13px] font-bold font-bold transition-all relative ${activeTab === 'requests' ? 'text-gray-900 border-b-2 border-gray-900 bg-gray-50/30 dark:bg-white/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'}`}
         >
           <MdPersonAdd size={18} />
           <span>Requests</span>
@@ -61,8 +61,8 @@ export default function ParticipantsList({ roomId }) {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] text-gray-900 dark:text-gray-100 font-karla-bold truncate">You (Host)</p>
-                <p className="text-[10px] text-gray-400 font-karla-light uppercase tracking-wider">Organizer</p>
+                <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold truncate">You (Host)</p>
+                <p className="text-[10px] text-gray-400 font-light uppercase tracking-wider">Organizer</p>
               </div>
               <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-white/10 px-2 py-1 rounded-lg border border-gray-100 dark:border-white/5">
                 {isMuted ? <MdMicOff className="text-[#f4796a]" size={16} /> : <MdMic className="text-emerald-500" size={16} />}
@@ -81,7 +81,7 @@ export default function ParticipantsList({ roomId }) {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] text-gray-800 dark:text-gray-200 font-karla-medium truncate">{peer.userName || 'Guest'}</p>
+                  <p className="text-[13px] text-gray-800 dark:text-gray-200 font-medium truncate">{peer.userName || 'Guest'}</p>
                 </div>
                 <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-white/10 px-2 py-1 rounded-lg border border-gray-100 dark:border-white/5 opacity-60 group-hover:opacity-100 transition-opacity">
                   {peer.audioEnabled === false ? <MdMicOff className="text-[#f4796a]" size={16} /> : <MdMic className="text-emerald-500" size={16} />}
@@ -92,7 +92,7 @@ export default function ParticipantsList({ roomId }) {
             {peers.length === 0 && (activeTab === 'participants') && (
               <div className="flex flex-col items-center justify-center py-12 opacity-40">
                 <MdGroup size={40} className="text-gray-300 mb-2" />
-                <p className="text-gray-400 text-xs font-karla-light italic">No other participants yet</p>
+                <p className="text-gray-400 text-xs font-light italic">No other participants yet</p>
               </div>
             )}
           </>
@@ -101,7 +101,7 @@ export default function ParticipantsList({ roomId }) {
             {pendingJoinRequests.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-14 opacity-30">
                 <MdPersonAdd size={40} className="text-gray-300 mb-2" />
-                <p className="text-gray-500 dark:text-gray-400 text-xs font-karla-medium">No pending requests</p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">No pending requests</p>
               </div>
             ) : (
               pendingJoinRequests.map((req) => (
@@ -110,8 +110,8 @@ export default function ParticipantsList({ roomId }) {
                     <span className="text-sm font-bold text-gray-600 dark:text-gray-400">{(req.displayName || 'G')[0].toUpperCase()}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] text-gray-900 dark:text-gray-100 font-karla-bold truncate">{req.displayName}</p>
-                    <p className="text-[10px] text-gray-400 font-karla-light">Waiting to join</p>
+                    <p className="text-[13px] text-gray-900 dark:text-gray-100 font-bold truncate">{req.displayName}</p>
+                    <p className="text-[10px] text-gray-400 font-light">Waiting to join</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button 

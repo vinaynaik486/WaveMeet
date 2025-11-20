@@ -25,7 +25,7 @@ export default function JoinRequestPanel({ roomId, onClose }) {
   return (
     <div className="bg-white rounded-2xl flex-shrink-0">
       <div className="px-5 pt-5 pb-2">
-        <h3 className="text-[15px] font-bold text-gray-900 font-karla-bold">Request to Join</h3>
+        <h3 className="text-[15px] font-bold text-gray-900 font-bold">Request to Join</h3>
       </div>
       <div className="px-5 pb-4 space-y-3">
         {pendingJoinRequests.map((req) => (
@@ -33,7 +33,7 @@ export default function JoinRequestPanel({ roomId, onClose }) {
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 to-orange-400 flex items-center justify-center flex-shrink-0 overflow-hidden">
               <span className="text-xs font-bold text-white">{(req.displayName || 'G')[0].toUpperCase()}</span>
             </div>
-            <span className="flex-1 text-[13px] text-gray-800 font-karla-medium">{req.displayName}</span>
+            <span className="flex-1 text-[13px] text-gray-800 font-medium">{req.displayName}</span>
             {/* Reject — coral/salmon circle */}
             <button onClick={() => handleReject(req)} className="w-8 h-8 rounded-full bg-[#f4796a] hover:bg-[#e8685a] flex items-center justify-center transition-colors">
               <MdClose className="text-white" size={16} />

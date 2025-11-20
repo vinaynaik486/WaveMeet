@@ -15,7 +15,7 @@ export default function MeetingControls({ onLeave, onToggleMute, onToggleCamera,
         {isRecording && (
           <div className="flex items-center gap-2 bg-red-500/10 backdrop-blur-md rounded-full px-4 py-2 mr-2 border border-red-500/20 shadow-xl animate-in slide-in-from-bottom-2">
             <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-red-500 text-xs font-karla-bold uppercase tracking-wider">Recording</span>
+            <span className="text-red-500 text-xs font-bold uppercase tracking-wider">Recording</span>
           </div>
         )}
 
@@ -27,7 +27,7 @@ export default function MeetingControls({ onLeave, onToggleMute, onToggleCamera,
               {isMuted ? <MdMicOff size={24} /> : <MdMic size={24} />}
             </button>
           </TooltipTrigger>
-          <TooltipContent side="top" className="bg-[#121222] border-white/10 text-white font-karla-medium">{isMuted ? 'Unmute' : 'Mute'}</TooltipContent>
+          <TooltipContent side="top" className="bg-[#121222] border-white/10 text-white font-medium">{isMuted ? 'Unmute' : 'Mute'}</TooltipContent>
         </Tooltip>
 
         {/* Camera */}
@@ -38,7 +38,7 @@ export default function MeetingControls({ onLeave, onToggleMute, onToggleCamera,
               {isCameraOff ? <MdVideocamOff size={24} /> : <MdVideocam size={24} />}
             </button>
           </TooltipTrigger>
-          <TooltipContent side="top" className="bg-[#121222] border-white/10 text-white font-karla-medium">{isCameraOff ? 'Turn on camera' : 'Turn off camera'}</TooltipContent>
+          <TooltipContent side="top" className="bg-[#121222] border-white/10 text-white font-medium">{isCameraOff ? 'Turn on camera' : 'Turn off camera'}</TooltipContent>
         </Tooltip>
 
         {/* Reactions - Centered in the middle of controls */}
@@ -52,7 +52,7 @@ export default function MeetingControls({ onLeave, onToggleMute, onToggleCamera,
               <MdScreenShare size={24} />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="top" className="bg-[#121222] border-white/10 text-white font-karla-medium">Share Screen</TooltipContent>
+          <TooltipContent side="top" className="bg-[#121222] border-white/10 text-white font-medium">Share Screen</TooltipContent>
         </Tooltip>
 
         {/* Divider */}
@@ -64,10 +64,10 @@ export default function MeetingControls({ onLeave, onToggleMute, onToggleCamera,
             <button onClick={onLeave}
               className="px-6 h-14 rounded-full flex items-center gap-2.5 transition-all duration-300 shadow-2xl backdrop-blur-xl border border-red-500/30 bg-red-500 hover:bg-red-600 text-white shadow-red-500/30 hover:scale-105 active:scale-95">
               <MdCallEnd size={22} />
-              <span className="font-karla-bold text-sm">Leave</span>
+              <span className="font-bold text-sm">Leave</span>
             </button>
           </TooltipTrigger>
-          <TooltipContent side="top" className="bg-[#121222] border-white/10 text-white font-karla-medium">Leave Meeting</TooltipContent>
+          <TooltipContent side="top" className="bg-[#121222] border-white/10 text-white font-medium">Leave Meeting</TooltipContent>
         </Tooltip>
       </div>
     </TooltipProvider>

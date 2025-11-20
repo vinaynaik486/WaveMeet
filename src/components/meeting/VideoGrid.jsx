@@ -87,8 +87,8 @@ export default function VideoGrid({ onLeave, onToggleMute, onToggleCamera, onTog
                   ))}
                 </div>
                 <div className="flex flex-col items-center">
-                  <span className="text-xl font-bold text-white font-karla-bold tracking-tight">+{stripPeers.length - 5}</span>
-                  <span className="text-[10px] text-white/40 font-karla-medium uppercase tracking-widest">More</span>
+                  <span className="text-xl font-bold text-white font-bold tracking-tight">+{stripPeers.length - 5}</span>
+                  <span className="text-[10px] text-white/40 font-medium uppercase tracking-widest">More</span>
                 </div>
               </div>
             </div>

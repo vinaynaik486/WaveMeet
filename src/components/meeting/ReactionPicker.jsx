@@ -51,7 +51,7 @@ export default function ReactionPicker({ roomId }) {
                     {item.emoji}
                   </button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-[#121222] text-white text-[10px] font-karla-bold border-white/10">{item.label}</TooltipContent>
+                <TooltipContent className="bg-[#121222] text-white text-[10px] font-bold border-white/10">{item.label}</TooltipContent>
               </Tooltip>
             ))}
           </div>

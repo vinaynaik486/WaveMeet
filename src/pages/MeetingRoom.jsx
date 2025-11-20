@@ -10,6 +10,7 @@ import ParticipantsList from '@/components/meeting/ParticipantsList';
 import TaskListPanel from '@/components/meeting/TaskListPanel';
 import { MdArrowBack, MdContentCopy, MdCheck, MdLock, MdLockOpen } from 'react-icons/md';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import ClassicLoader from '@/components/ui/loader';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -118,8 +119,8 @@ export default function MeetingRoom() {
 
   if (!user) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#fafafa]">
-        <div className="animate-pulse text-gray-400 font-karla-medium">Loading meeting...</div>
+      <div className="h-screen flex flex-col items-center justify-center bg-[#fafafa] dark:bg-[#0a0a1a]">
+        <ClassicLoader />
       </div>
     );
   }
@@ -133,7 +134,7 @@ export default function MeetingRoom() {
         </div>
         <div className="text-center">
           <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight mb-2">Waiting Room</h2>
-          <p className="text-sm text-gray-400 font-karla-medium">Waiting for host to let you in...</p>
+          <p className="text-sm text-gray-400 font-medium">Waiting for host to let you in...</p>
         </div>
         <button
           onClick={() => { dispatch({ type: 'SET_WAITING', payload: false }); navigate('/dashboard'); }}
@@ -154,7 +155,7 @@ export default function MeetingRoom() {
         </div>
         <div className="text-center">
           <h2 className="text-xl font-black text-gray-900 dark:text-white tracking-tight mb-2">Request Declined</h2>
-          <p className="text-sm text-gray-400 font-karla-medium">{state.waitingRejected}</p>
+          <p className="text-sm text-gray-400 font-medium">{state.waitingRejected}</p>
         </div>
         <button
           onClick={() => { dispatch({ type: 'SET_WAITING_REJECTED', payload: null }); navigate('/dashboard'); }}
@@ -186,8 +187,8 @@ export default function MeetingRoom() {
             </Tooltip>
             
             <div>
-              <h1 className="text-xl font-black text-gray-900 dark:text-white font-karla-bold tracking-tight">WaveMeet Weekly Meeting</h1>
-              <p className="text-[12px] text-gray-400 font-karla-medium flex items-center gap-1.5 mt-0.5">
+              <h1 className="text-xl font-black text-gray-900 dark:text-white font-bold tracking-tight">WaveMeet Weekly Meeting</h1>
+              <p className="text-[12px] text-gray-400 font-medium flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                 {peers.length + 1} Participant{peers.length !== 0 ? 's' : ''} Online
               </p>
@@ -200,7 +201,7 @@ export default function MeetingRoom() {
                 <TooltipTrigger asChild>
                   <button 
                     onClick={toggleLock} 
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl text-sm font-karla-bold border transition-all active:scale-95 shadow-sm ${
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-2xl text-sm font-bold border transition-all active:scale-95 shadow-sm ${
                       isLocked 
                         ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20' 
                         : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
@@ -217,7 +218,7 @@ export default function MeetingRoom() {
               <TooltipTrigger asChild>
                 <button 
                   onClick={handleCopyCode} 
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 text-sm font-karla-bold border border-gray-200 dark:border-white/10 transition-all active:scale-95 group shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 text-sm font-bold border border-gray-200 dark:border-white/10 transition-all active:scale-95 group shadow-sm"
                 >
                   <span className="font-mono text-[13px] text-gray-500 dark:text-gray-400">{roomId}</span>
                   {copied ? <MdCheck className="text-emerald-500" size={18} /> : <MdContentCopy className="text-gray-400 group-hover:text-gray-500" size={18} />}

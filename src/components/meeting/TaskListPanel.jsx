@@ -36,7 +36,7 @@ export default function TaskListPanel({ roomId }) {
           <div className="text-gray-900 dark:text-white">
             <MdChecklist size={20} />
           </div>
-          <h3 className="text-[13px] font-black text-gray-900 dark:text-white font-karla-bold tracking-tight leading-none">Task List</h3>
+          <h3 className="text-[13px] font-black text-gray-900 dark:text-white font-bold tracking-tight leading-none">Task List</h3>
         </div>
         <button 
           onClick={() => dispatch({ type: 'TOGGLE_TASKS' })}
@@ -51,7 +51,7 @@ export default function TaskListPanel({ roomId }) {
         {tasks.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center py-0 opacity-30">
             <MdChecklist size={64} className="text-gray-300 dark:text-gray-700 mb-4" />
-            <p className="text-gray-400 text-sm font-karla-medium italic">No tasks yet</p>
+            <p className="text-gray-400 text-sm font-medium italic">No tasks yet</p>
           </div>
         )}
         <div className="space-y-1">
@@ -74,7 +74,7 @@ export default function TaskListPanel({ roomId }) {
                     : 'border-gray-300 dark:border-white/20 bg-transparent'
                 } data-[state=checked]:text-white`}
               />
-              <span className={`flex-1 text-[13px] font-karla-medium leading-relaxed transition-all break-words overflow-hidden ${
+              <span className={`flex-1 text-[13px] font-medium leading-relaxed transition-all break-words overflow-hidden ${
                 task.completed
                   ? 'text-gray-300 dark:text-white/30 line-through'
                   : 'text-gray-800 dark:text-white/90'
@@ -100,7 +100,7 @@ export default function TaskListPanel({ roomId }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Add a task..."
-            className="w-full pl-6 pr-14 py-4 rounded-full bg-[#fafafa] dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-white/30 font-karla-medium focus:border-gray-300 dark:focus:border-white/20 transition-all shadow-inner"
+            className="w-full pl-6 pr-14 py-4 rounded-full bg-[#fafafa] dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-white/30 font-medium focus:border-gray-300 dark:focus:border-white/20 transition-all shadow-inner"
           />
           <button
             type="submit"
