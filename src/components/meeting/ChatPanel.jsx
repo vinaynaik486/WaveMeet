@@ -35,7 +35,7 @@ export default function ChatPanel({ onSendMessage, roomId }) {
             <div className="text-gray-900 dark:text-white">
               <MdChatBubbleOutline size={20} />
             </div>
-            <h3 className="text-[13px] font-black text-gray-900 dark:text-white font-bold tracking-tight leading-none">Room Chat</h3>
+            <h3 className="text-[13px] text-gray-900 dark:text-white font-bold tracking-tight leading-none">Room Chat</h3>
           </div>
           <button 
             onClick={() => dispatch({ type: 'TOGGLE_CHAT' })}
