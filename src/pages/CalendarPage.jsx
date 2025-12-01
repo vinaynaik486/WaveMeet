@@ -104,7 +104,7 @@ export default function CalendarPage() {
               <MdArrowBack size={22} className="text-gray-600 dark:text-gray-400" />
             </button>
             <div>
-              <h1 className="text-2xl font-black text-gray-900 dark:text-white font-bold tracking-tight">Calendar</h1>
+              <h1 className="text-2xl text-gray-900 dark:text-white font-bold tracking-tight">Calendar</h1>
               <p className="text-sm text-gray-400 font-medium mt-0.5">Manage your scheduled meetings</p>
             </div>
           </div>
@@ -124,7 +124,7 @@ export default function CalendarPage() {
           {/* Calendar Grid */}
           <div className="lg:col-span-2 bg-white dark:bg-[#121222] rounded-[2rem] p-8 shadow-2xl shadow-black/5 border border-gray-100 dark:border-white/5 transition-all duration-500">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-black text-gray-900 dark:text-white font-bold">{MO[mo]} {yr}</h2>
+              <h2 className="text-xl text-gray-900 dark:text-white font-bold">{MO[mo]} {yr}</h2>
               <div className="flex gap-2">
                 <button onClick={() => setDate(new Date(yr, mo - 1, 1))} className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 transition-all"><MdChevronLeft size={24}/></button>
                 <button onClick={() => setDate(new Date(yr, mo + 1, 1))} className="p-2.5 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 transition-all"><MdChevronRight size={24}/></button>
@@ -167,7 +167,7 @@ export default function CalendarPage() {
 
           {/* Agenda Side Panel */}
           <div className="bg-white dark:bg-[#121222] rounded-[2rem] p-8 shadow-2xl shadow-black/5 border border-gray-100 dark:border-white/5 transition-all duration-500 overflow-y-auto max-h-[600px] custom-scrollbar">
-            <h3 className="text-lg font-black text-gray-900 dark:text-white font-bold mb-6">
+            <h3 className="text-lg text-gray-900 dark:text-white font-bold mb-6">
               {selDay ? `${MO[mo]} ${selDay}` : 'Upcoming Meetings'}
             </h3>
             <div className="space-y-6">

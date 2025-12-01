@@ -36,7 +36,7 @@ export default function ToastAlert({ notification, onDismiss }) {
           <Icon className="text-gray-500 dark:text-gray-400" size={24} />
         </div>
         <div className="flex-1 min-w-0 py-0.5">
-          <p className="text-[14px] font-black text-gray-900 dark:text-white font-bold leading-tight tracking-tight">{notification.title}</p>
+          <p className="text-[14px] text-gray-900 dark:text-white font-bold leading-tight tracking-tight">{notification.title}</p>
           {notification.body && <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium mt-1.5 leading-relaxed">{notification.body}</p>}
         </div>
         <button 

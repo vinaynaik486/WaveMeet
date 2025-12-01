@@ -187,7 +187,7 @@ export default function MeetingRoom() {
             </Tooltip>
             
             <div>
-              <h1 className="text-xl font-black text-gray-900 dark:text-white font-bold tracking-tight">WaveMeet Weekly Meeting</h1>
+              <h1 className="text-xl text-gray-900 dark:text-white font-bold tracking-tight">WaveMeet Weekly Meeting</h1>
               <p className="text-[12px] text-gray-400 font-medium flex items-center gap-1.5 mt-0.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                 {peers.length + 1} Participant{peers.length !== 0 ? 's' : ''} Online
