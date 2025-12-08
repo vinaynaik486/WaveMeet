@@ -19,7 +19,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'https://wavemeet-frontend.onrender.com',
-];
+  process.env.CLIENT_URL, // Dynamic Vercel/Production URL
+].filter(Boolean);
 
 app.use(cors({ origin: allowedOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'], credentials: true }));
 
