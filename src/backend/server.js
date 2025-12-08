@@ -155,6 +155,7 @@ app.get('/api/calendar', async (req, res) => {
 
 // Health check
 app.get('/', (_, res) => res.json({ status: 'WaveMeet API running' }));
+app.get('/health', (_, res) => res.send('OK'));
 
 // ── ICE Servers ────────────────────────────────────────────
 const iceServers = [

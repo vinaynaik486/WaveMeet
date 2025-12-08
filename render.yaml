@@ -11,7 +11,7 @@ services:
         value: 3001
       - key: MONGO_URI
         sync: false
-    healthCheckPath: /
+    healthCheckPath: /health
     autoDeploy: true
     plan: free
 
@@ -29,6 +29,6 @@ services:
         value: 10000
       - key: HOST
         value: 0.0.0.0
-    healthCheckPath: /
+    healthCheckPath: /health
     autoDeploy: true
     plan: free
