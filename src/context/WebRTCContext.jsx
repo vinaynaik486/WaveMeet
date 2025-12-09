@@ -31,6 +31,23 @@ export function WebRTCProvider({ children }) {
     }
   }, []);
 
+  /**
+   * Universal negotiator. Handles sending offers when tracks change
+   * or initial connections are established.
+   */
+  const negotiate = useCallback(async (targetSocketId) => {
+    const pc = peerConnections.current[targetSocketId];
+    if (!pc) return;
+    try {
+      const offer = await pc.createOffer();
+      if (pc.signalingState !== 'stable') return; // Prevent glare
+      await pc.setLocalDescription(offer);
+      socket.emit('offer', { to: targetSocketId, offer: pc.localDescription });
+    } catch (err) {
+      console.error('[WebRTC] Negotiation failed:', err);
+    }
+  }, [socket]);
+
   const createPeer = useCallback((targetSocketId, isInitiator) => {
     const pc = new RTCPeerConnection({ iceServers: iceServersRef.current });
 
@@ -50,48 +67,72 @@ export function WebRTCProvider({ children }) {
       if (pc.iceConnectionState === 'failed') pc.restartIce();
     };
 
+    pc.onnegotiationneeded = () => {
+      if (isInitiator) negotiate(targetSocketId);
+    };
+
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track => pc.addTrack(track, localStreamRef.current));
     }
 
     peerConnections.current[targetSocketId] = pc;
     return pc;
-  }, [socket, dispatch]);
+  }, [socket, dispatch, negotiate]);
 
   const joinRoom = useCallback(async () => {
     if (!socket || !roomId) return;
+    
+    let stream = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      // Robust acquisition: try full AV, then fallback
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      } catch (e) {
+        console.warn('[WebRTC] AV acquisition failed, trying fallback...', e.name);
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } catch (e2) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          } catch (e3) {
+            console.error('[WebRTC] No media devices found');
+          }
+        }
+      }
+
       localStreamRef.current = stream;
       
       const isNewRoomSession = state.lastJoinedRoomId !== roomId;
 
-      if (isNewRoomSession) {
-        const defaultMute = user?.settings?.defaultMuteOnJoin;
-        const defaultVideoOff = user?.settings?.defaultVideoOffOnJoin;
+      if (stream) {
+        if (isNewRoomSession) {
+          const defaultMute = user?.settings?.defaultMuteOnJoin;
+          const defaultVideoOff = user?.settings?.defaultVideoOffOnJoin;
 
-        if (defaultMute) {
-          stream.getAudioTracks().forEach(t => t.enabled = false);
-          dispatch({ type: 'SET_MUTED', payload: true });
-        } else {
-          dispatch({ type: 'SET_MUTED', payload: false });
-        }
-        
-        if (defaultVideoOff) {
-          stream.getVideoTracks().forEach(t => t.enabled = false);
-          dispatch({ type: 'SET_CAMERA_OFF', payload: true });
-        } else {
-          dispatch({ type: 'SET_CAMERA_OFF', payload: false });
-        }
+          if (defaultMute) {
+            stream.getAudioTracks().forEach(t => t.enabled = false);
+            dispatch({ type: 'SET_MUTED', payload: true });
+          } else {
+            dispatch({ type: 'SET_MUTED', payload: false });
+          }
+          
+          if (defaultVideoOff) {
+            stream.getVideoTracks().forEach(t => t.enabled = false);
+            dispatch({ type: 'SET_CAMERA_OFF', payload: true });
+          } else {
+            dispatch({ type: 'SET_CAMERA_OFF', payload: false });
+          }
 
-        dispatch({ type: 'SET_LAST_ROOM', payload: roomId });
-      } else {
-        if (state.isMuted) stream.getAudioTracks().forEach(t => t.enabled = false);
-        if (state.isCameraOff) stream.getVideoTracks().forEach(t => t.enabled = false);
+          dispatch({ type: 'SET_LAST_ROOM', payload: roomId });
+        } else {
+          if (state.isMuted) stream.getAudioTracks().forEach(t => t.enabled = false);
+          if (state.isCameraOff) stream.getVideoTracks().forEach(t => t.enabled = false);
+        }
       }
 
       dispatch({ type: 'SET_LOCAL_STREAM', payload: stream });
       dispatch({ type: 'SET_JOINED' });
+      
       socket.emit('join-room', { 
         roomId: roomId.trim().toLowerCase(), 
         userId: user?.uid || 'anon', 
@@ -100,7 +141,7 @@ export function WebRTCProvider({ children }) {
         waitingRoomEnabled: user?.settings?.waitingRoomEnabled || false
       });
     } catch (err) {
-      console.error('[MEDIA]', err);
+      console.error('[MEDIA] Join error:', err);
       dispatch({ type: 'SET_JOINED' });
       socket.emit('join-room', { 
         roomId: roomId.trim().toLowerCase(), 
@@ -127,29 +168,85 @@ export function WebRTCProvider({ children }) {
     dispatch({ type: 'RESET' });
   }, [socket, roomId, dispatch]);
 
-  const toggleMute = useCallback(() => {
-    const stream = localStreamRef.current;
-    if (stream) {
-      const track = stream.getAudioTracks()[0];
-      if (track) {
-        track.enabled = !track.enabled;
-        dispatch({ type: 'TOGGLE_MUTE' });
-        socket?.emit('toggle-audio', { roomId: roomId?.trim().toLowerCase(), enabled: track.enabled });
+  const toggleMute = useCallback(async () => {
+    let stream = localStreamRef.current;
+    
+    // Recovery: If stream or track missing, try to acquire it
+    if (!stream || !stream.getAudioTracks().length) {
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const audioTrack = newStream.getAudioTracks()[0];
+        
+        if (stream) {
+          stream.addTrack(audioTrack);
+        } else {
+          localStreamRef.current = newStream;
+          stream = newStream;
+          dispatch({ type: 'SET_LOCAL_STREAM', payload: stream });
+        }
+        
+        // Add to existing connections and trigger negotiation
+        for (const [sid, pc] of Object.entries(peerConnections.current)) {
+          pc.addTrack(audioTrack, stream);
+          negotiate(sid);
+        }
+        
+        dispatch({ type: 'SET_MUTED', payload: false });
+        socket?.emit('toggle-audio', { roomId: roomId?.trim().toLowerCase(), enabled: true });
+        return;
+      } catch (err) {
+        console.error('[WebRTC] Failed to acquire mic:', err);
+        return;
       }
     }
-  }, [socket, roomId, dispatch]);
 
-  const toggleCamera = useCallback(() => {
-    const stream = localStreamRef.current;
-    if (stream) {
-      const track = stream.getVideoTracks()[0];
-      if (track) {
-        track.enabled = !track.enabled;
-        dispatch({ type: 'TOGGLE_CAMERA' });
-        socket?.emit('toggle-video', { roomId: roomId?.trim().toLowerCase(), enabled: track.enabled });
+    const track = stream.getAudioTracks()[0];
+    if (track) {
+      track.enabled = !track.enabled;
+      dispatch({ type: 'TOGGLE_MUTE' });
+      socket?.emit('toggle-audio', { roomId: roomId?.trim().toLowerCase(), enabled: track.enabled });
+    }
+  }, [socket, roomId, dispatch, negotiate]);
+
+  const toggleCamera = useCallback(async () => {
+    let stream = localStreamRef.current;
+
+    // Recovery: If stream or track missing, try to acquire it
+    if (!stream || !stream.getVideoTracks().length) {
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const videoTrack = newStream.getVideoTracks()[0];
+        
+        if (stream) {
+          stream.addTrack(videoTrack);
+        } else {
+          localStreamRef.current = newStream;
+          stream = newStream;
+          dispatch({ type: 'SET_LOCAL_STREAM', payload: stream });
+        }
+        
+        // Add to existing connections and trigger negotiation
+        for (const [sid, pc] of Object.entries(peerConnections.current)) {
+          pc.addTrack(videoTrack, stream);
+          negotiate(sid);
+        }
+
+        dispatch({ type: 'SET_CAMERA_OFF', payload: false });
+        socket?.emit('toggle-video', { roomId: roomId?.trim().toLowerCase(), enabled: true });
+        return;
+      } catch (err) {
+        console.error('[WebRTC] Failed to acquire camera:', err);
+        return;
       }
     }
-  }, [socket, roomId, dispatch]);
+
+    const track = stream.getVideoTracks()[0];
+    if (track) {
+      track.enabled = !track.enabled;
+      dispatch({ type: 'TOGGLE_CAMERA' });
+      socket?.emit('toggle-video', { roomId: roomId?.trim().toLowerCase(), enabled: track.enabled });
+    }
+  }, [socket, roomId, dispatch, negotiate]);
 
   const toggleScreenShare = useCallback(async () => {
     const nRoomId = roomId?.trim().toLowerCase();
@@ -206,10 +303,7 @@ export function WebRTCProvider({ children }) {
       iceServersRef.current = iceServers || [];
       for (const u of users) {
         dispatch({ type: 'ADD_PEER', payload: { socketId: u.socketId, odId: u.odId, userName: u.userName, photoURL: u.photoURL, stream: null, audioEnabled: u.audioEnabled ?? true, videoEnabled: u.videoEnabled ?? true } });
-        const pc = createPeer(u.socketId, true);
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        socket.emit('offer', { to: u.socketId, offer });
+        createPeer(u.socketId, true); // onnegotiationneeded will trigger the offer
       }
     };
 
@@ -219,16 +313,28 @@ export function WebRTCProvider({ children }) {
     };
 
     const onOffer = async ({ from, offer }) => {
-      const pc = createPeer(from, false);
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      socket.emit('answer', { to: from, answer });
+      let pc = peerConnections.current[from];
+      if (!pc) pc = createPeer(from, false);
+      
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit('answer', { to: from, answer });
+      } catch (err) {
+        console.error('[WebRTC] Offer processing failed:', err);
+      }
     };
 
     const onAnswer = async ({ from, answer }) => {
       const pc = peerConnections.current[from];
-      if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      if (pc) {
+        try {
+          await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        } catch (err) {
+          console.error('[WebRTC] Answer processing failed:', err);
+        }
+      }
     };
 
     const onIceCandidate = async ({ from, candidate }) => {
@@ -271,7 +377,6 @@ export function WebRTCProvider({ children }) {
     };
     const onJoinApproved = ({ roomId: approvedRoomId }) => {
       dispatch({ type: 'SET_WAITING', payload: false });
-      // Re-emit join-room now that host approved
       socket.emit('join-room', {
         roomId: approvedRoomId.trim().toLowerCase(),
         userId: user?.uid || 'anon',
@@ -330,7 +435,7 @@ export function WebRTCProvider({ children }) {
       socket.off('force-muted', onForceMuted);
       socket.off('removed-from-meeting', onRemoved);
     };
-  }, [socket, createPeer, dispatch, leaveRoom]);
+  }, [socket, createPeer, dispatch, leaveRoom, user]);
 
   const value = {
     joinRoom,

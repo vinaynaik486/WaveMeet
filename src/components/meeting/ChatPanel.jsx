@@ -37,7 +37,7 @@ export default function ChatPanel({ onSendMessage, roomId }) {
             </div>
             <h3 className="text-[13px] text-gray-900 dark:text-white font-bold tracking-tight leading-none">Room Chat</h3>
           </div>
-          <button 
+          <button
             onClick={() => dispatch({ type: 'TOGGLE_CHAT' })}
             className="w-8 h-8 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-all active:scale-95 border border-transparent hover:border-gray-200 dark:hover:border-white/10"
           >
@@ -77,12 +77,11 @@ export default function ChatPanel({ onSendMessage, roomId }) {
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{timeStr}</span>
                   </div>
                 )}
-                
-                <div className={`max-w-[85%] px-4 py-3 rounded-[1.5rem] shadow-sm transition-all ${
-                  isMe 
-                    ? 'bg-gray-900 text-white rounded-tr-sm' 
-                    : 'bg-gray-100 dark:bg-white/5 text-gray-800 dark:text-gray-200 rounded-tl-sm border border-gray-200/50 dark:border-white/5'
-                }`}>
+
+                <div className={`max-w-[85%] px-4 py-3 rounded-[1.5rem] shadow-sm transition-all ${isMe
+                  ? 'bg-gray-900 text-white rounded-tr-sm'
+                  : 'bg-gray-100 dark:bg-white/5 text-gray-800 dark:text-gray-200 rounded-tl-sm border border-gray-200/50 dark:border-white/5'
+                  }`}>
                   {/* Person name inside - only for others */}
                   {showHeader && !isMe && (
                     <div className="text-[10px] font-black uppercase tracking-wider mb-1.5 opacity-60 text-left">
@@ -96,9 +95,9 @@ export default function ChatPanel({ onSendMessage, roomId }) {
                 </div>
 
                 {!showHeader && (
-                   <span className="text-[8px] text-gray-400 font-black mt-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                     {timeStr}
-                   </span>
+                  <span className="text-[8px] text-gray-400 font-black mt-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {timeStr}
+                  </span>
                 )}
               </div>
             );
@@ -115,17 +114,17 @@ export default function ChatPanel({ onSendMessage, roomId }) {
         {/* Input area - Unified Design */}
         <div className="px-4 py-4">
           <form onSubmit={handleSend} className="relative group">
-            <input 
-              type="text" 
-              value={input} 
-              onChange={(e) => setInput(e.target.value)} 
-              onKeyDown={handleTyping} 
-              placeholder="Send a message" 
-              className="w-full pl-6 pr-14 py-4 rounded-full bg-[#fafafa] dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-white/30 font-medium focus:border-gray-300 dark:focus:border-white/20 transition-all shadow-inner" 
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleTyping}
+              placeholder="Send a message"
+              className="w-full pl-6 pr-14 py-4 rounded-full bg-[#fafafa] dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-white/30 font-medium focus:border-gray-300 dark:focus:border-white/20 transition-all shadow-inner"
             />
-            <button 
-              type="submit" 
-              disabled={!input.trim()} 
+            <button
+              type="submit"
+              disabled={!input.trim()}
               className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-gray-400 dark:text-white/40 hover:text-gray-500 dark:hover:text-gray-400 disabled:opacity-30 transition-all active:scale-90"
             >
               <MdSend size={24} />

@@ -38,7 +38,7 @@ export default function TaskListPanel({ roomId }) {
           </div>
           <h3 className="text-[13px] text-gray-900 dark:text-white font-bold tracking-tight leading-none">Task List</h3>
         </div>
-        <button 
+        <button
           onClick={() => dispatch({ type: 'TOGGLE_TASKS' })}
           className="w-8 h-8 rounded-xl bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-white flex items-center justify-center transition-all active:scale-95 border border-transparent hover:border-gray-200 dark:hover:border-white/10"
         >
@@ -58,27 +58,24 @@ export default function TaskListPanel({ roomId }) {
           {tasks.map((task) => (
             <div
               key={task._id}
-              className={`flex items-center gap-3 px-4 py-3 rounded-[1.5rem] transition-all cursor-pointer group ${
-                task.completed
+              className={`flex items-center gap-3 px-4 py-3 rounded-[1.5rem] transition-all cursor-pointer group ${task.completed
                   ? 'bg-gray-100 dark:bg-white/5'
                   : 'bg-gray-100 dark:bg-white/5 border border-gray-200/50 dark:border-white/5'
-              }`}
+                }`}
               onClick={() => handleToggle(task._id)}
             >
               <Checkbox
                 checked={task.completed}
                 onCheckedChange={() => handleToggle(task._id)}
-                className={`w-5 h-5 rounded-full border-2 transition-all flex-shrink-0 ${
-                  task.completed
+                className={`w-5 h-5 rounded-full border-2 transition-all flex-shrink-0 ${task.completed
                     ? 'bg-emerald-500 border-emerald-500 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500'
                     : 'border-gray-300 dark:border-white/20 bg-transparent'
-                } data-[state=checked]:text-white`}
+                  } data-[state=checked]:text-white`}
               />
-              <span className={`flex-1 text-[13px] font-medium leading-relaxed transition-all break-words overflow-hidden ${
-                task.completed
+              <span className={`flex-1 text-[13px] font-medium leading-relaxed transition-all break-words overflow-hidden ${task.completed
                   ? 'text-gray-300 dark:text-white/30 line-through'
                   : 'text-gray-800 dark:text-white/90'
-              }`}>
+                }`}>
                 {task.text}
               </span>
               <button

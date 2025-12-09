@@ -18,7 +18,7 @@ app.use(express.json());
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://wavemeet-frontend.onrender.com',
+  'https://wavemeet-ihs3.onrender.com',
   process.env.CLIENT_URL, // Dynamic Vercel/Production URL
 ].filter(Boolean);
 
@@ -221,7 +221,7 @@ io.on('connection', (socket) => {
         $set: { status: 'active' },
         $setOnInsert: { hostId: userId, title: 'Ad-hoc Meeting', waitingRoomEnabled: waitingRoomEnabled || false },
       }, { upsert: true, setDefaultsOnInsert: true, new: true });
-      
+
       socket.emit('room-info', {
         hostId: updatedMeeting.hostId,
         waitingRoomEnabled: updatedMeeting.waitingRoomEnabled
@@ -238,7 +238,7 @@ io.on('connection', (socket) => {
     try {
       const meeting = await Meeting.findOne({ roomId: nRoomId });
       if (meeting?.tasks) socket.emit('tasks-updated', meeting.tasks);
-      
+
       // Load pending requests if user is host
       if (meeting && meeting.hostId === userId && meeting.waitingRoom && meeting.waitingRoom.length > 0) {
         socket.emit('pending-requests', meeting.waitingRoom);
