@@ -2,6 +2,7 @@ import React, { createContext, useContext, useCallback, useEffect, useRef } from
 import { useSocket } from './SocketContext';
 import { useMeeting } from './MeetingContext';
 import { useAuth } from './AuthContext';
+import { deriveRoomKey, encryptData, decryptData } from '@/lib/crypto';
 
 const WebRTCContext = createContext(null);
 
@@ -20,6 +21,7 @@ export function WebRTCProvider({ children }) {
   const localStreamRef = useRef(null);
   const screenStreamRef = useRef(null);
   const iceServersRef = useRef([]);
+  const roomKeyRef = useRef(null);
 
   const playAudio = useCallback((type) => {
     try {
@@ -82,6 +84,17 @@ export function WebRTCProvider({ children }) {
   const joinRoom = useCallback(async () => {
     if (!socket || !roomId) return;
     
+    // 1. Fetch meeting details to get password for E2EE derivation
+    let meetingPassword = '';
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/meetings/${roomId}`);
+      const data = await res.json();
+      if (data.meeting) meetingPassword = data.meeting.password || '';
+    } catch (e) { /* ignore */ }
+
+    // 2. Initialize E2EE Key
+    roomKeyRef.current = await deriveRoomKey(roomId.trim().toLowerCase(), meetingPassword);
+
     let stream = null;
     try {
       // Robust acquisition: try full AV, then fallback
@@ -157,6 +170,7 @@ export function WebRTCProvider({ children }) {
     if (socket && roomId) socket.emit('leave-room', { roomId: roomId.trim().toLowerCase() });
     Object.values(peerConnections.current).forEach(pc => pc.close());
     peerConnections.current = {};
+    roomKeyRef.current = null;
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(t => t.stop());
       localStreamRef.current = null;
@@ -291,9 +305,18 @@ export function WebRTCProvider({ children }) {
     } catch (err) { console.error('[SCREEN]', err); }
   }, [socket, roomId, state.isScreenSharing, dispatch]);
 
-  const sendChatMessage = useCallback((message) => {
+  const sendChatMessage = useCallback(async (message) => {
     if (!socket || !message.trim()) return;
-    socket.emit('chat-message', { roomId: roomId?.trim().toLowerCase(), message, senderId: user?.uid || 'anon', senderName: user?.displayName || 'Guest' });
+    
+    // Encrypt before sending
+    const encrypted = await encryptData(message, roomKeyRef.current);
+    
+    socket.emit('chat-message', { 
+      roomId: roomId?.trim().toLowerCase(), 
+      message: encrypted, 
+      senderId: user?.uid || 'anon', 
+      senderName: user?.displayName || 'Guest' 
+    });
   }, [socket, roomId, user]);
 
   useEffect(() => {
@@ -355,8 +378,21 @@ export function WebRTCProvider({ children }) {
       dispatch({ type: 'UPDATE_PEER_MEDIA', payload: { socketId, audioEnabled, videoEnabled } });
     };
 
-    const onNewMessage = (msg) => dispatch({ type: 'ADD_MESSAGE', payload: msg });
-    const onChatHistory = (msgs) => dispatch({ type: 'SET_CHAT_HISTORY', payload: msgs });
+    const onNewMessage = async (msg) => { 
+      // Decrypt incoming message
+      const decryptedText = await decryptData(msg.message, roomKeyRef.current);
+      dispatch({ type: 'ADD_MESSAGE', payload: { ...msg, message: decryptedText } }); 
+    };
+
+    const onChatHistory = async (msgs) => { 
+      // Decrypt full history
+      const decryptedMsgs = await Promise.all(msgs.map(async m => ({
+        ...m,
+        message: await decryptData(m.message, roomKeyRef.current)
+      })));
+      dispatch({ type: 'SET_CHAT_HISTORY', payload: decryptedMsgs }); 
+    };
+
     const onUserTyping = ({ userName }) => {
       dispatch({ type: 'SET_TYPING', payload: userName });
       setTimeout(() => dispatch({ type: 'CLEAR_TYPING', payload: userName }), 3000);
