@@ -21,6 +21,12 @@ function Pricing() {
       price: 799,
       features: ['Up to 250 participants per meeting', 'Meeting duration: Unlimited', 'Full HD (1080p) video quality', 'Advanced Multi-screen sharing', '24/7 premium customer support'],
       isPopular: false
+    },
+    {
+      plan: 'Enterprise',
+      price: 1499,
+      features: ['Everything in Pro', 'Up to 500 participants per meeting', 'Custom Branding & Domain', 'Dedicated Account Manager', 'SLA & 99.9% Uptime Guarantee', 'Advanced Analytics'],
+      isPopular: false
     }
   ];
   return (

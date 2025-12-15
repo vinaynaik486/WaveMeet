@@ -28,7 +28,7 @@ export default function ChatPanel({ onSendMessage, roomId }) {
 
   return (
     <TooltipProvider>
-      <div className="bg-[#fafafa] dark:bg-[#0a0a1a] rounded-3xl flex flex-col h-full overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 transition-all duration-500">
+      <div className="bg-background rounded-3xl flex flex-col h-full overflow-hidden shadow-2xl border border-gray-200 dark:border-white/10 transition-all duration-500">
         {/* Header */}
         <div className="px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export default function ChatPanel({ onSendMessage, roomId }) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleTyping}
               placeholder="Send a message"
-              className="w-full pl-6 pr-14 py-4 rounded-full bg-[#fafafa] dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-white/30 font-medium focus:border-gray-300 dark:focus:border-white/20 transition-all shadow-inner"
+              className="w-full pl-6 pr-14 py-4 rounded-full bg-background dark:bg-white/5 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-white/30 font-medium focus:border-gray-300 dark:focus:border-white/20 transition-all shadow-inner"
             />
             <button
               type="submit"

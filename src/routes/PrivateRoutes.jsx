@@ -15,7 +15,7 @@ const MeetingEndPage = lazy(() => import('../pages/MeetingEndPage'));
 
 function MeetingLayout({ children }) {
   return (
-    <div className="h-screen flex bg-[#fafafa] dark:bg-[#0a0a1a] transition-colors duration-500 overflow-hidden">
+    <div className="h-screen flex bg-background transition-colors duration-500 overflow-hidden">
       <MeetingSidebar />
       <div className="flex-1 h-full overflow-y-auto custom-scrollbar">
         {children}
@@ -37,7 +37,7 @@ function PrivateRoutes() {
       <MeetingProvider>
         <WebRTCProvider>
           <Suspense fallback={
-            <div className="h-screen w-full flex items-center justify-center bg-[#fafafa] dark:bg-[#0a0a1a]">
+            <div className="h-screen w-full flex items-center justify-center bg-background">
               <ClassicLoader />
             </div>
           }>

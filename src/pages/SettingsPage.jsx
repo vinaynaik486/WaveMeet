@@ -180,7 +180,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a1a] font-karla transition-colors duration-500">
+    <div className="min-h-screen bg-background font-karla transition-colors duration-500">
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">

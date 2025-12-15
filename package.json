@@ -30,6 +30,7 @@
     "dotenv": "^17.2.4",
     "express": "^4.21.2",
     "firebase": "^11.2.0",
+    "framer-motion": "^12.38.0",
     "gsap": "^3.12.7",
     "lottie-web": "^5.12.2",
     "lucide-react": "^0.452.0",

@@ -31,7 +31,7 @@ const FeatureComponent = ({ heading, description, features }) => {
 
 function Solutions() {
   return (
-    <div className='flex flex-col items-center bg-[#fafafa] dark:bg-[#0a0a1a] transition-colors duration-300'>
+    <div className='flex flex-col items-center bg-background transition-colors duration-300'>
       <div id="solutions" className='mt-14 mx-4 md:mx-16 lg:mx-28 mb-10 flex flex-col lg:flex-row gap-10 lg:gap-48'>
         <div className='flex items-center justify-center gap-8'>
           <div>
@@ -95,7 +95,7 @@ function Solutions() {
 }
 
 const FeatureItem = ({ icon: Icon, text }) => (
-  <div className='w-64 h-20 flex gap-4 items-center rounded-md shadow-lg px-4 bg-[#fafafa] dark:bg-[#0a0a1a] dark:shadow-[rgba(255,255,255,0.08)] dark:border dark:border-gray-600'>
+  <div className='w-64 h-20 flex gap-4 items-center rounded-md shadow-lg px-4 bg-background dark:shadow-[rgba(255,255,255,0.08)] dark:border dark:border-gray-600'>
     <Icon />
     <span className='text-lg font-semibold text-gray-900 dark:text-gray-100'>{text}</span>
   </div>

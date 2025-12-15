@@ -59,7 +59,7 @@ const App = () => {
             <NotificationToasts />
             <div className="scroll-smooth">
               <React.Suspense fallback={
-                <div className="h-screen w-full flex items-center justify-center bg-[#fafafa] dark:bg-[#121212]">
+                <div className="h-screen w-full flex items-center justify-center bg-background">
                   <ClassicLoader />
                 </div>
               }>

@@ -127,7 +127,7 @@ export default function MeetingRoom() {
 
   if (!user) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-[#fafafa] dark:bg-[#0a0a1a]">
+      <div className="h-screen flex flex-col items-center justify-center bg-background">
         <ClassicLoader />
       </div>
     );
@@ -136,7 +136,7 @@ export default function MeetingRoom() {
   // Waiting room screen
   if (state.isWaiting) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-[#fafafa] dark:bg-[#0a0a1a] gap-6">
+      <div className="h-screen flex flex-col items-center justify-center bg-background gap-6">
         <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center border border-gray-200 dark:border-white/10">
           <div className="w-4 h-4 rounded-full bg-gray-900 dark:bg-white animate-pulse" />
         </div>
@@ -157,7 +157,7 @@ export default function MeetingRoom() {
   // Rejection screen
   if (state.waitingRejected) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-[#fafafa] dark:bg-[#0a0a1a] gap-6">
+      <div className="h-screen flex flex-col items-center justify-center bg-background gap-6">
         <div className="w-20 h-20 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center border border-red-100 dark:border-red-500/20">
           <span className="text-3xl">✕</span>
         </div>
@@ -178,9 +178,9 @@ export default function MeetingRoom() {
   const activePanelsCount = [isChatOpen, isParticipantsOpen, isTasksOpen].filter(Boolean).length;
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[#fafafa] dark:bg-[#0a0a1a]">
+    <div className="flex h-full w-full overflow-hidden bg-background">
       <div className="flex-1 flex flex-col min-w-0 px-4 py-3 transition-all duration-500 ease-in-out">
-        <div className="flex items-center justify-between mb-4 bg-[#fafafa] dark:bg-[#0a0a1a] rounded-2xl px-5 py-3 shadow-[0_0_50px_rgba(0,0,0,0.08)] dark:shadow-[0_0_50px_rgba(0,0,0,0.3)] border border-gray-200 dark:border-white/10 transition-all duration-500">
+        <div className="flex items-center justify-between mb-4 bg-background rounded-2xl px-5 py-3 shadow-[0_0_50px_rgba(0,0,0,0.08)] dark:shadow-[0_0_50px_rgba(0,0,0,0.3)] border border-gray-200 dark:border-white/10 transition-all duration-500">
           <div className="flex items-center gap-4">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -243,7 +243,7 @@ export default function MeetingRoom() {
       </div>
 
       {activePanelsCount > 0 && (
-        <div className="w-[340px] flex flex-col gap-3 py-3 pr-4 pl-0 h-full overflow-hidden transition-all duration-500 animate-in slide-in-from-right bg-[#fafafa] dark:bg-[#0a0a1a]">
+        <div className="w-[340px] flex flex-col gap-3 py-3 pr-4 pl-0 h-full overflow-hidden transition-all duration-500 animate-in slide-in-from-right bg-background">
           {isParticipantsOpen && (
             <div className="flex-1 min-h-0 transition-all duration-500">
               <ParticipantsList roomId={roomId} />

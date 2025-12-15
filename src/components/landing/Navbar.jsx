@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
-import websiteLogo from '/src/assets/logo/logo.png';
+import Logo from '../ui/Logo';
+import BlurIn from '../ui/BlurIn';
 import { PlusIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/solid';
 import { HashLink } from 'react-router-hash-link';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -49,14 +49,7 @@ function Navbar() {
     updateNavbarHeight();
     window.addEventListener('resize', updateNavbarHeight);
 
-    const animationFrame = requestAnimationFrame(() => {
-      const elements = navbarRef.current.querySelectorAll('.reveal-text');
-      gsap.fromTo(
-        elements,
-        { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: 'power1.out' }
-      );
-    });
+    // Removed GSAP orchestrations in favor of BlurIn (framer-motion)
 
     let ticking = false;
     const handleScroll = () => {
@@ -75,7 +68,6 @@ function Navbar() {
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', updateNavbarHeight);
-      cancelAnimationFrame(animationFrame);
     };
   }, []);
 
@@ -99,68 +91,90 @@ function Navbar() {
       >
         {showSignIn
           ? "Don't have an account? Sign Up"
-          : "Already have an account? Sign In"
+          : "Already have an account? Log In"
         }
       </button>
     </div>
   );
 
   return (
-    <div
+    <nav
       ref={navbarRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-150 transform-gpu ${scrolled
-        ? 'bg-[#fafafa] dark:bg-[#0a0a1a] bg-opacity-80 dark:bg-opacity-80 backdrop-blur-md shadow-md py-2'
-        : 'bg-transparent py-5'
+      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled
+        ? 'bg-white/40 dark:bg-black/40 backdrop-blur-xl py-1.5'
+        : 'bg-transparent py-3'
         }`}
     >
-      <div className="relative px-4 py-4 lg:py-2 sm:px-6 md:px-8 lg:px-20 flex justify-between items-center font-karla">
+      <div className="relative px-4 py-2 lg:py-1 sm:px-6 md:px-8 lg:px-20 flex justify-between items-center font-karla">
         {/* Logo */}
-        <div 
-          className="flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200 transform-gpu"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        >
-          <img src={websiteLogo} alt="" className="h-8 sm:h-10 reveal-text" loading="eager" />
-          <span className="text-xl font-semibold reveal-text dark:text-white">WaveMeet</span>
-        </div>
+        <BlurIn delay={0.1}>
+          <div
+            className="flex items-center cursor-pointer transform-gpu"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <Logo className="h-10 sm:h-12" />
+            <span className="text-2xl sm:text-3xl font-bold dark:text-white">WaveMeet</span>
+          </div>
+        </BlurIn>
 
         <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 gap-8">
-          <HashLink smooth to="/#solutions" scroll={scrollWithOffset} className="cursor-pointer">
-            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-medium">Solutions</button>
-          </HashLink>
-          <HashLink smooth to="/#pricing" scroll={scrollWithOffset} className="cursor-pointer">
-            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-medium">Plan & Pricing</button>
-          </HashLink>
-          <HashLink smooth to="/#contact_us" scroll={scrollWithOffset} className="cursor-pointer">
-            <button className="reveal-text dark:text-white hover:text-gray-600 dark:hover:text-gray-300 font-medium">Contact Us</button>
-          </HashLink>
+          <BlurIn delay={0.2}>
+            <HashLink smooth to="/#solutions" scroll={scrollWithOffset} className="cursor-pointer">
+              <button className="px-3 py-2 rounded-md dark:text-white hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-normal">Solutions</button>
+            </HashLink>
+          </BlurIn>
+
+          <BlurIn delay={0.3}>
+            <HashLink smooth to="/#pricing" scroll={scrollWithOffset} className="cursor-pointer">
+              <button className="px-3 py-2 rounded-md dark:text-white hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-normal">Plan & Pricing</button>
+            </HashLink>
+          </BlurIn>
+          <BlurIn delay={0.4}>
+            <HashLink smooth to="/#contact_us" scroll={scrollWithOffset} className="cursor-pointer">
+              <button className="px-3 py-2 rounded-md dark:text-white hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-normal">Contact Us</button>
+            </HashLink>
+          </BlurIn>
         </div>
 
         {/* Right Side Actions */}
         <div className="hidden lg:flex items-center gap-4">
           {user ? (
             <>
-              <span className="dark:text-white font-light">
+              <span className="dark:text-white font-normal">
                 Welcome, {user.displayName ? user.displayName.split(' ')[0] : 'User'}
               </span>
               <button
                 onClick={handleLogout}
-                className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white font-medium"
+                className="px-3 py-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-medium"
               >
                 Logout
               </button>
             </>
           ) : (
-            <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-              <DialogTrigger asChild>
-                <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text font-medium">
-                  <span className="text-sm sm:text-base">Login</span>
+            <BlurIn delay={0.5}>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => { setShowSignIn(true); setDialogOpen(true); }}
+                  className="px-3 py-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-medium text-sm"
+                >
+                  Login
                 </button>
-              </DialogTrigger>
-              <DialogContent className="dark:bg-[#121212]">
-                <AuthContent />
-              </DialogContent>
-            </Dialog>
+                <button 
+                  onClick={() => { setShowSignIn(false); setDialogOpen(true); }}
+                  className="bg-transparent border border-[#fe583e] text-[#fe583e] py-2 px-5 sm:py-2.5 sm:px-7 hover:bg-[#fe583e] hover:text-white transition-colors duration-300 rounded-full font-medium text-sm"
+                >
+                  Create Account
+                </button>
+              </div>
+
+              <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
+                <DialogContent className="dark:bg-[#121212]">
+                  <AuthContent />
+                </DialogContent>
+              </Dialog>
+            </BlurIn>
           )}
+
 
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -191,27 +205,31 @@ function Navbar() {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-[#fafafa] dark:bg-[#0a0a1a] mx-4 mt-4 rounded-lg shadow-md py-4 px-4 sm:px-6 md:px-8">
           <HashLink smooth to="/#solutions" scroll={scrollWithOffset} className="block py-2">
-            <button className="reveal-text dark:text-white font-medium">Solutions</button>
+            <button className="reveal-text dark:text-white hover:text-[#fe583e] dark:hover:text-[#fe583e] transition-colors font-medium">Solutions</button>
           </HashLink>
           <HashLink smooth to="/#pricing" scroll={scrollWithOffset} className="block py-2">
-            <button className="reveal-text dark:text-white font-medium">Plan & Pricing</button>
+            <button className="reveal-text dark:text-white hover:text-[#fe583e] dark:hover:text-[#fe583e] transition-colors font-medium">Plan & Pricing</button>
           </HashLink>
           <HashLink smooth to="/#contact_us" scroll={scrollWithOffset} className="block py-2">
-            <button className="reveal-text dark:text-white font-medium">Contact Us</button>
+            <button className="reveal-text dark:text-white hover:text-[#fe583e] dark:hover:text-[#fe583e] transition-colors font-medium">Contact Us</button>
           </HashLink>
           <div className="flex items-center justify-between mt-4">
-          {!user && (
-            <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-              <DialogTrigger asChild>
-                  <button className="bg-[#222222] dark:bg-white dark:text-[#222222] text-white py-2 px-4 sm:py-3 sm:px-5 scale-105 hover:bg-[#333333] dark:hover:bg-gray-100 hover:text-white rounded-md flex justify-center items-center gap-2 reveal-text font-medium">
-                    <span className="text-sm sm:text-base">Login</span>
+            {!user && (
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => { setShowSignIn(true); setDialogOpen(true); setMobileMenuOpen(false); }}
+                  className="text-left px-3 py-2 rounded-md dark:text-white hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-medium text-sm"
+                >
+                  Login
                 </button>
-              </DialogTrigger>
-              <DialogContent className="dark:bg-[#121212]">
-                <AuthContent />
-              </DialogContent>
-            </Dialog>
-          )}
+                <button 
+                  onClick={() => { setShowSignIn(false); setDialogOpen(true); setMobileMenuOpen(false); }}
+                  className="bg-transparent border border-[#fe583e] text-[#fe583e] py-2.5 px-8 hover:bg-[#fe583e] hover:text-white transition-colors rounded-full font-medium text-sm text-center"
+                >
+                  Create Account
+                </button>
+              </div>
+            )}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#333333] transition-colors"
@@ -225,7 +243,7 @@ function Navbar() {
           </div>
         </div>
       )}
-    </div>
+    </nav>
   );
 }
 

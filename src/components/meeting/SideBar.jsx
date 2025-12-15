@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-import websiteLogo from '@/assets/logo/logo.png';
+import Logo from '../ui/Logo';
 import {
   PanelLeftOpen,
   PanelLeftClose,
@@ -64,7 +64,7 @@ const Sidebar = () => {
             {isExpanded && (
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <img src={websiteLogo} alt="Logo" className="h-5 w-5 object-contain" />
+                  <Logo className="h-5 w-5" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[15px] font-medium dark:text-white text-gray-900">

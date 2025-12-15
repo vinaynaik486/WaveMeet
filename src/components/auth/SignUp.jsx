@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import websiteLogo from '@/assets/logo/logo.png';
+import Logo from '../ui/Logo';
 
 export default function SignUp({ onToggleAuth }) {
   const [firstName, setFirstName] = useState('');
@@ -73,7 +73,7 @@ export default function SignUp({ onToggleAuth }) {
   return (
     <div className="bg-white dark:bg-[#121212] p-6 rounded-lg shadow-lg max-w-sm w-full">
       <div className="flex mb-4">
-        <img src={websiteLogo} alt="Logo" className="w-16" />
+        <Logo className="w-16 h-auto" />
       </div>
       <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-left mt-4">Create your account</h2>
       <p className="text-gray-500 dark:text-gray-400 text-left mb-4 mt-2">to continue to WaveMeet</p>

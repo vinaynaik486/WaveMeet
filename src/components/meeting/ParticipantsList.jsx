@@ -24,9 +24,9 @@ export default function ParticipantsList({ roomId }) {
   };
 
   return (
-    <div className="bg-[#fafafa] dark:bg-[#0a0a1a] rounded-2xl border border-gray-200 dark:border-white/5 flex flex-col h-full overflow-hidden shadow-lg transition-all duration-500">
+    <div className="bg-background rounded-2xl border border-gray-200 dark:border-white/5 flex flex-col h-full overflow-hidden shadow-lg transition-all duration-500">
       {/* Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-white/5 flex-shrink-0 bg-[#fafafa] dark:bg-transparent">
+      <div className="flex border-b border-gray-200 dark:border-white/5 flex-shrink-0 bg-background dark:bg-transparent">
         <button 
           onClick={() => setActiveTab('participants')}
           className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-[13px] font-bold font-bold transition-all ${activeTab === 'participants' ? 'text-gray-900 border-b-2 border-gray-900 bg-gray-50/30 dark:bg-white/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-[#fafafa] dark:hover:bg-white/5'}`}

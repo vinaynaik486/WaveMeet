@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import websiteLogo from '@/assets/logo/logo.png';
+import Logo from '../ui/Logo';
 
 export default function SignIn({ onToggle, onSuccess }) {
   const [useEmail, setUseEmail] = useState(false);
@@ -28,8 +28,8 @@ export default function SignIn({ onToggle, onSuccess }) {
         onSuccess();
       }
     } catch (err) {
-      setError('Failed to sign in. Please check your credentials.');
-      console.error('Sign in error:', err);
+      setError('Failed to log in. Please check your credentials.');
+      console.error('Log in error:', err);
     } finally {
       setLoading(false);
     }
@@ -54,9 +54,9 @@ export default function SignIn({ onToggle, onSuccess }) {
     <div className="flex items-center justify-center">
       <div className="bg-white dark:bg-[#121212] p-8 rounded-lg shadow-lg max-w-sm w-full">
         <div className="flex mb-6">
-          <img src={websiteLogo} alt="Logo" className="w-16" />
+          <Logo className="w-16 h-auto" />
         </div>
-        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-left mt-6">Sign in</h2>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 text-left mt-6">Log in</h2>
         <p className="text-gray-500 dark:text-gray-400 text-left mb-6 mt-2">to continue to WaveMeet</p>
 
         {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}

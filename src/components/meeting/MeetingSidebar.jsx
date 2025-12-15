@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { MdDashboard, MdNotifications, MdVideocam, MdCalendarToday, MdSettings, MdPerson, MdChat, MdGroup, MdChecklist, MdLightMode, MdDarkMode, MdMenuOpen, MdMenu } from 'react-icons/md';
 import NotificationDropdown, { NotificationBadge } from '@/components/notifications/NotificationDropdown';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import Logo from '@/components/ui/Logo';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -68,27 +69,28 @@ export default function MeetingSidebar({ roomId: propRoomId }) {
     { id: 'tasks', icon: MdChecklist, label: 'Tasks', action: () => handleSidebarAction('TOGGLE_TASKS'), active: state.isTasksOpen },
   ];
 
-  const activeBtnClass = "bg-gray-900 dark:bg-white/10 text-white border border-gray-800 dark:border-white/20 shadow-xl";
+  const activeBtnClass = "bg-transparent text-gray-900 dark:text-white border-[0.2px] border-[#fe583e] shadow-sm";
   const inactiveBtnClass = "text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5 border border-transparent";
 
   return (
     <div 
-      className={`${isExpanded ? 'w-64' : 'w-20'} flex flex-col items-center py-6 bg-[#fafafa] dark:bg-[#121222] rounded-2xl m-3 mr-0 relative border border-gray-200 dark:border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.08)] dark:shadow-[0_0_50px_rgba(0,0,0,0.3)] h-[calc(100vh-1.5rem)] transition-all duration-500 ease-in-out z-50 overflow-hidden`}
+      className={`${isExpanded ? 'w-64' : 'w-20'} flex flex-col items-center py-6 bg-background rounded-2xl m-3 mr-0 relative border border-gray-200 dark:border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.08)] dark:shadow-[0_0_50px_rgba(0,0,0,0.3)] h-[calc(100vh-1.5rem)] transition-all duration-500 ease-in-out z-50 overflow-hidden`}
     >
       
       {/* Sidebar Header: Brand + Toggle */}
       <div className={`flex items-center h-12 mb-10 w-full transition-all duration-500 ${isExpanded ? 'px-5 justify-between' : 'justify-center'}`}>
-        <div className={`flex items-center transition-all duration-500 ${isExpanded ? 'opacity-100 translate-x-0 w-auto mr-3' : 'opacity-0 -translate-x-4 w-0 overflow-hidden pointer-events-none'}`}>
-          <span className="ml-5 text-gray-900 dark:text-white font-black text-2xl tracking-tighter whitespace-nowrap">
+        <div className={`flex items-center transition-all duration-500 ${isExpanded ? 'opacity-100 translate-x-0 w-auto' : 'opacity-0 -translate-x-4 w-0 overflow-hidden pointer-events-none'}`}>
+          <Logo className="h-8 sm:h-10" />
+          <span className="ml-2 text-gray-900 dark:text-white font-bold text-xl sm:text-2xl tracking-tighter whitespace-nowrap">
             WaveMeet
           </span>
         </div>
         
         <button 
           onClick={() => setIsExpanded(!isExpanded)}
-          className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-xl border border-white/5 bg-gray-900 dark:bg-white/10 text-white hover:scale-105 active:scale-95 flex-shrink-0"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 bg-transparent text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 active:scale-95 flex-shrink-0"
         >
-          {isExpanded ? <MdMenuOpen size={24} /> : <MdMenu size={24} />}
+          {isExpanded ? <MdMenuOpen size={28} /> : <MdMenu size={28} />}
         </button>
       </div>
 
