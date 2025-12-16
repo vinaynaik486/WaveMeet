@@ -18,11 +18,25 @@ app.use(express.json());
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-  'https://wavemeet-ihs3.onrender.com',
-  process.env.CLIENT_URL, // Dynamic Vercel/Production URL
+  'https://wavemeet-frontend.onrender.com',
+  'https://wavemeet.vercel.app',
+  process.env.CLIENT_URL,
 ].filter(Boolean);
 
-app.use(cors({ origin: allowedOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'], credentials: true }));
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 
 // ── MongoDB ────────────────────────────────────────────────
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/wavemeet';
@@ -164,7 +178,19 @@ const iceServers = [
 ];
 
 // ── Socket.IO ──────────────────────────────────────────────
-const io = new Server(server, { cors: { origin: allowedOrigins, methods: ['GET', 'POST'], credentials: true } });
+const io = new Server(server, { 
+  cors: { 
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST'], 
+    credentials: true 
+  } 
+});
 
 // Room state (in-memory)
 const rooms = new Map(); // roomId -> Map(socketId -> { odId, userName, audioEnabled, videoEnabled })
