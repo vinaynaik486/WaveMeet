@@ -3,6 +3,7 @@ import { useSocket } from './SocketContext';
 import { useMeeting } from './MeetingContext';
 import { useAuth } from './AuthContext';
 import { deriveRoomKey, encryptData, decryptData } from '@/lib/crypto';
+import { toast } from 'react-hot-toast';
 
 const WebRTCContext = createContext(null);
 
@@ -22,6 +23,7 @@ export function WebRTCProvider({ children }) {
   const screenStreamRef = useRef(null);
   const iceServersRef = useRef([]);
   const roomKeyRef = useRef(null);
+  const pendingCandidates = useRef({}); // socketId -> [candidates]
 
   const playAudio = useCallback((type) => {
     try {
@@ -60,9 +62,9 @@ export function WebRTCProvider({ children }) {
     };
 
     pc.ontrack = (e) => {
-      if (e.streams?.[0]) {
-        dispatch({ type: 'UPDATE_PEER_STREAM', payload: { socketId: targetSocketId, stream: e.streams[0] } });
-      }
+      // Use existing stream or create a new one if not provided
+      const remoteStream = e.streams[0] || new MediaStream([e.track]);
+      dispatch({ type: 'UPDATE_PEER_STREAM', payload: { socketId: targetSocketId, stream: remoteStream } });
     };
 
     pc.oniceconnectionstatechange = () => {
@@ -171,6 +173,7 @@ export function WebRTCProvider({ children }) {
     Object.values(peerConnections.current).forEach(pc => pc.close());
     peerConnections.current = {};
     roomKeyRef.current = null;
+    pendingCandidates.current = {};
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(t => t.stop());
       localStreamRef.current = null;
@@ -302,7 +305,14 @@ export function WebRTCProvider({ children }) {
         socket?.emit('screen-share-stop', { roomId: nRoomId });
       };
       socket?.emit('screen-share-start', { roomId: nRoomId });
-    } catch (err) { console.error('[SCREEN]', err); }
+    } catch (err) { 
+      console.error('[SCREEN]', err);
+      if (err.name === 'NotAllowedError') {
+        toast.error('Screen share cancelled.');
+      } else {
+        toast.error('Could not start screen sharing.');
+      }
+    }
   }, [socket, roomId, state.isScreenSharing, dispatch]);
 
   const sendChatMessage = useCallback(async (message) => {
@@ -335,6 +345,17 @@ export function WebRTCProvider({ children }) {
       playAudio('entry');
     };
 
+    const flushCandidates = async (sid) => {
+      const pc = peerConnections.current[sid];
+      const candidates = pendingCandidates.current[sid];
+      if (pc && candidates) {
+        for (const candidate of candidates) {
+          try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { /* ignore */ }
+        }
+        delete pendingCandidates.current[sid];
+      }
+    };
+
     const onOffer = async ({ from, offer }) => {
       let pc = peerConnections.current[from];
       if (!pc) pc = createPeer(from, false);
@@ -344,6 +365,7 @@ export function WebRTCProvider({ children }) {
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         socket.emit('answer', { to: from, answer });
+        flushCandidates(from);
       } catch (err) {
         console.error('[WebRTC] Offer processing failed:', err);
       }
@@ -354,6 +376,7 @@ export function WebRTCProvider({ children }) {
       if (pc) {
         try {
           await pc.setRemoteDescription(new RTCSessionDescription(answer));
+          flushCandidates(from);
         } catch (err) {
           console.error('[WebRTC] Answer processing failed:', err);
         }
@@ -362,8 +385,11 @@ export function WebRTCProvider({ children }) {
 
     const onIceCandidate = async ({ from, candidate }) => {
       const pc = peerConnections.current[from];
-      if (pc && candidate) {
+      if (pc && pc.remoteDescription && pc.remoteDescription.type) {
         try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { /* ignore */ }
+      } else {
+        if (!pendingCandidates.current[from]) pendingCandidates.current[from] = [];
+        pendingCandidates.current[from].push(candidate);
       }
     };
 

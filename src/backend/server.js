@@ -171,11 +171,20 @@ app.get('/api/calendar', async (req, res) => {
 app.get('/', (_, res) => res.json({ status: 'WaveMeet API running' }));
 app.get('/health', (_, res) => res.send('OK'));
 
-// ── ICE Servers ────────────────────────────────────────────
+// ── ICE Servers (Production: Add TURN for NAT traversal) ───
 const iceServers = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
 ];
+
+// If TURN server env variables are provided, add them to the list
+if (process.env.TURN_URL) {
+  iceServers.push({
+    urls: process.env.TURN_URL,
+    username: process.env.TURN_USERNAME,
+    credential: process.env.TURN_PASSWORD
+  });
+}
 
 // ── Socket.IO ──────────────────────────────────────────────
 const io = new Server(server, { 

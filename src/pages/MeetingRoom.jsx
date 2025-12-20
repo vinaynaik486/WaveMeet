@@ -11,6 +11,7 @@ import TaskListPanel from '@/components/meeting/TaskListPanel';
 import { MdArrowBack, MdContentCopy, MdCheck, MdLock, MdLockOpen } from 'react-icons/md';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import ClassicLoader from '@/components/ui/loader';
+import { toast } from 'react-hot-toast';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -44,16 +45,23 @@ export default function MeetingRoom() {
   useEffect(() => {
     if (!roomId || !user) return;
     
-    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/api/meetings/${roomId}`)
-      .then(res => res.json())
+    fetch(`${API}/api/meetings/${roomId}`)
+      .then(res => {
+        if (res.status === 404) throw new Error('Meeting not found');
+        return res.json();
+      })
       .then(data => {
         if (data.meeting) {
           setIsHost(data.meeting.hostId === user.uid);
           setIsLocked(data.meeting.waitingRoomEnabled || false);
         }
       })
-      .catch(() => {});
-  }, [roomId, user]);
+      .catch((err) => {
+        console.error('[ROOM_FETCH]', err);
+        toast.error('Meeting not found or has ended.');
+        navigate('/dashboard');
+      });
+  }, [roomId, user, navigate]);
 
   /**
    * Subscribes to real-time meeting state updates via WebSockets.
