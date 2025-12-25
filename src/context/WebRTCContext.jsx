@@ -62,13 +62,22 @@ export function WebRTCProvider({ children }) {
     };
 
     pc.ontrack = (e) => {
+      console.log(`[WebRTC] Received remote track from ${targetSocketId}:`, e.track.kind);
       // Use existing stream or create a new one if not provided
       const remoteStream = e.streams[0] || new MediaStream([e.track]);
       dispatch({ type: 'UPDATE_PEER_STREAM', payload: { socketId: targetSocketId, stream: remoteStream } });
     };
 
     pc.oniceconnectionstatechange = () => {
-      if (pc.iceConnectionState === 'failed') pc.restartIce();
+      console.log(`[WebRTC] Connection state with ${targetSocketId}: ${pc.iceConnectionState}`);
+      if (pc.iceConnectionState === 'failed') {
+        console.warn('[WebRTC] ICE Connection failed. Restarting ICE...');
+        pc.restartIce();
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      console.log(`[WebRTC] Peer connection state: ${pc.connectionState}`);
     };
 
     pc.onnegotiationneeded = () => {
