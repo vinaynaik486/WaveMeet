@@ -54,6 +54,12 @@ export function useMeetingManager() {
             return;
         }
 
+        const isValidFormat = /^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(cleanCode);
+        if (!isValidFormat) {
+            setError('Code must be in xxxx-xxxx-xxxx format');
+            return;
+        }
+
         navigate(`/meeting/${cleanCode}`);
     }, [user, meetingCode, navigate]);
 
@@ -64,6 +70,12 @@ export function useMeetingManager() {
     const handleManualJoin = useCallback(() => {
         const cleanCode = meetingCode.trim();
         if (!cleanCode) return;
+
+        const isValidFormat = /^[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}$/.test(cleanCode);
+        if (!isValidFormat) {
+            setError('Code must be in xxxx-xxxx-xxxx format');
+            return;
+        }
 
         if (user) {
             navigate(`/meeting/${cleanCode}`);
