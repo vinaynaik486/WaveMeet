@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Logo from '../ui/Logo';
 
-export default function SignUp({ onToggleAuth }) {
+export default function SignUp({ onToggleAuth, onClose }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -71,7 +71,7 @@ export default function SignUp({ onToggleAuth }) {
   };
 
   return (
-    <div className="bg-white dark:bg-[#121212] p-6 rounded-lg shadow-lg max-w-sm w-full">
+    <div className="w-full relative">
       <div className="flex mb-4">
         <Logo className="w-16 h-auto" />
       </div>
@@ -157,6 +157,13 @@ export default function SignUp({ onToggleAuth }) {
           {loading ? 'Loading...' : 'Sign Up'}
         </button>
       </div>
+
+      <button
+        onClick={onToggleAuth}
+        className="w-full mt-6 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-light"
+      >
+        Already have an account? Log In
+      </button>
     </div>
   );
 }

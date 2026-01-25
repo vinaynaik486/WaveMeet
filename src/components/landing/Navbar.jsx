@@ -84,16 +84,17 @@ function Navbar() {
 
   const AuthContent = () => (
     <div className="w-full">
-      {showSignIn ? <SignIn onToggle={toggleAuth} /> : <SignUp onToggle={toggleAuth} />}
-      <button
-        onClick={toggleAuth}
-        className="w-full mt-4 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 font-light"
-      >
-        {showSignIn
-          ? "Don't have an account? Sign Up"
-          : "Already have an account? Log In"
-        }
-      </button>
+      {showSignIn ? (
+        <SignIn 
+          onToggle={toggleAuth} 
+          onClose={() => handleDialogChange(false)}
+        />
+      ) : (
+        <SignUp 
+          onToggleAuth={toggleAuth} 
+          onClose={() => handleDialogChange(false)}
+        />
+      )}
     </div>
   );
 
@@ -120,18 +121,18 @@ function Navbar() {
         <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2 gap-8">
           <BlurIn delay={0.2}>
             <HashLink smooth to="/#solutions" scroll={scrollWithOffset} className="cursor-pointer">
-              <button className="px-3 py-2 rounded-md dark:text-white hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-normal">Solutions</button>
+              <button className="px-4 py-2 rounded-full dark:text-white hover:text-[#FE583E] hover:bg-[#FE583E]/10 transition-all duration-300 font-normal">Solutions</button>
             </HashLink>
           </BlurIn>
 
           <BlurIn delay={0.3}>
             <HashLink smooth to="/#pricing" scroll={scrollWithOffset} className="cursor-pointer">
-              <button className="px-3 py-2 rounded-md dark:text-white hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-normal">Plan & Pricing</button>
+              <button className="px-4 py-2 rounded-full dark:text-white hover:text-[#FE583E] hover:bg-[#FE583E]/10 transition-all duration-300 font-normal">Plan & Pricing</button>
             </HashLink>
           </BlurIn>
           <BlurIn delay={0.4}>
             <HashLink smooth to="/#contact_us" scroll={scrollWithOffset} className="cursor-pointer">
-              <button className="px-3 py-2 rounded-md dark:text-white hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-normal">Contact Us</button>
+              <button className="px-4 py-2 rounded-full dark:text-white hover:text-[#FE583E] hover:bg-[#FE583E]/10 transition-all duration-300 font-normal">Contact Us</button>
             </HashLink>
           </BlurIn>
         </div>
@@ -140,12 +141,12 @@ function Navbar() {
         <div className="hidden lg:flex items-center gap-4">
           {user ? (
             <>
-              <span className="dark:text-white font-normal">
+              <span className="text-[#FE583E] font-medium">
                 Welcome, {user.displayName ? user.displayName.split(' ')[0] : 'User'}
               </span>
               <button
                 onClick={handleLogout}
-                className="px-3 py-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-medium"
+                className="px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 hover:text-[#FE583E] hover:bg-[#FE583E]/10 transition-all duration-300 font-medium"
               >
                 Logout
               </button>
@@ -155,7 +156,7 @@ function Navbar() {
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => { setShowSignIn(true); setDialogOpen(true); }}
-                  className="px-3 py-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#333333] transition-all duration-300 font-medium text-sm"
+                  className="px-4 py-2 rounded-full text-gray-600 dark:text-gray-300 hover:text-[#FE583E] hover:bg-[#FE583E]/10 transition-all duration-300 font-medium text-sm"
                 >
                   Login
                 </button>
@@ -168,7 +169,7 @@ function Navbar() {
               </div>
 
               <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
-                <DialogContent className="dark:bg-[#121212]">
+                <DialogContent className="dark:bg-[#121212] p-8 max-w-sm sm:max-w-md border-none shadow-2xl">
                   <AuthContent />
                 </DialogContent>
               </Dialog>
@@ -178,7 +179,7 @@ function Navbar() {
 
           <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#333333] transition-colors"
+            className="p-2 rounded-full hover:bg-[#FE583E]/10 transition-colors"
           >
             {theme === 'dark' ? (
               <Sun className="h-5 w-5 text-white" />
@@ -232,7 +233,7 @@ function Navbar() {
             )}
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-[#333333] transition-colors"
+              className="p-2 rounded-full hover:bg-[#FE583E]/10 transition-colors"
             >
               {theme === 'dark' ? (
                 <Sun className="h-5 w-5 text-white" />

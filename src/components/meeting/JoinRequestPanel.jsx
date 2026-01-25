@@ -25,7 +25,7 @@ export default function JoinRequestPanel({ roomId, onClose }) {
   return (
     <div className="bg-white rounded-2xl flex-shrink-0">
       <div className="px-5 pt-5 pb-2">
-        <h3 className="text-[15px] font-bold text-gray-900 font-bold">Request to Join</h3>
+        <h3 className="text-[15px] text-gray-900 font-bold">Request to Join</h3>
       </div>
       <div className="px-5 pb-4 space-y-3">
         {pendingJoinRequests.map((req) => (
