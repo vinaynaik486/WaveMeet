@@ -115,7 +115,10 @@ function Navbar() {
     >
       <div className="relative px-4 py-4 lg:py-2 sm:px-6 md:px-8 lg:px-20 flex justify-between items-center font-karla">
         {/* Logo */}
-        <div className="flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200 transform-gpu">
+        <div 
+          className="flex items-center hover:scale-105 cursor-pointer hover:ease-in-out hover:duration-200 transform-gpu"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
           <img src={websiteLogo} alt="" className="h-8 sm:h-10 reveal-text" loading="eager" />
           <span className="text-xl font-semibold reveal-text dark:text-white">WaveMeet</span>
         </div>
